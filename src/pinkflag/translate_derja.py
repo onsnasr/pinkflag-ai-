@@ -9,6 +9,7 @@ ok / fix / bad, and only `ok` rows are used for training.
 import argparse
 import json
 import sys
+import time
 from pathlib import Path
 
 import pandas as pd
@@ -40,6 +41,18 @@ Messages:
 """
 
 
+# forces Gemini to answer in exactly this shape: [{"id": 3, "derja": ["...", "..."]}]
+RESPONSE_SCHEMA = {
+    "type": "ARRAY",
+    "items": {
+        "type": "OBJECT",
+        "properties": {"id": {"type": "INTEGER"},
+                       "derja": {"type": "ARRAY", "items": {"type": "STRING"}}},
+        "required": ["id", "derja"],
+    },
+}
+
+
 def build_prompt(batch: pd.DataFrame, variants: int) -> str:
     lines = "\n".join(f"{i}: {t}" for i, t in zip(batch.index, batch.text))
     return PROMPT.format(variants=variants, messages=lines)
@@ -51,16 +64,31 @@ def parse_response(payload: dict) -> list[dict]:
     return json.loads(text)
 
 
-def call_gemini(session, key: str, model: str, prompt: str, temperature: float) -> list[dict]:
-    resp = session.post(
-        API.format(model=model),
-        headers={"x-goog-api-key": key},
-        json={"contents": [{"parts": [{"text": prompt}]}],
-              "generationConfig": {"temperature": temperature,
-                                   "responseMimeType": "application/json"}},
-        timeout=120)
-    resp.raise_for_status()
-    return parse_response(resp.json())
+def call_gemini(session, key: str, model: str, prompt: str, temperature: float,
+                retries: int = 3) -> list[dict]:
+    for attempt in range(1, retries + 1):
+        try:
+            resp = session.post(
+                API.format(model=model),
+                headers={"x-goog-api-key": key},
+                json={"contents": [{"parts": [{"text": prompt}]}],
+                      "generationConfig": {"temperature": temperature,
+                                           "responseMimeType": "application/json",
+                                           "responseSchema": RESPONSE_SCHEMA}},
+                timeout=300)
+            if resp.status_code in (429, 500, 503) and attempt < retries:
+                raise requests.HTTPError(resp.status_code)
+            resp.raise_for_status()
+            return parse_response(resp.json())
+        except (requests.Timeout, requests.ConnectionError, requests.HTTPError,
+                json.JSONDecodeError, KeyError) as err:
+            if attempt == retries:
+                print(f"  ⚠️  batch failed after {retries} tries ({err}), skipping")
+                return []
+            wait = 10 * attempt
+            print(f"  ⏳ {type(err).__name__}, retrying in {wait}s...")
+            time.sleep(wait)
+    return []
 
 
 def main(argv=None) -> None:
@@ -74,25 +102,37 @@ def main(argv=None) -> None:
     session = requests.Session()
 
     src = pd.read_csv(cfg["input"])
-    rows = []
-    for start in range(0, len(src), cfg["batch_size"]):
-        batch = src.iloc[start:start + cfg["batch_size"]]
+    out_path = Path(cfg["output"])
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # resume: skip messages translated in an earlier run (free-tier limits interrupt runs)
+    done = pd.read_csv(out_path) if out_path.exists() and out_path.stat().st_size else None
+    rows = done.to_dict("records") if done is not None else []
+    done_ids = set(done.src_id) if done is not None else set()
+    todo = src[~src.index.isin(done_ids)]
+    print(f"  {len(done_ids)} already translated, {len(todo)} to go")
+
+    for start in range(0, len(todo), cfg["batch_size"]):
+        batch = todo.iloc[start:start + cfg["batch_size"]]
         results = call_gemini(session, key, cfg["model"],
                               build_prompt(batch, cfg["variants"]), cfg["temperature"])
         for r in results:
-            idx = int(r["id"])
+            idx = int(r.get("id", -1))
             if idx not in batch.index:
                 continue
             for derja in r.get("derja", []):
+                if not isinstance(derja, str) or not derja.strip():
+                    continue
                 rows.append({"text": derja.strip(), "label": batch.at[idx, "label"],
                              "text_en": batch.at[idx, "text"], "script": script_of(derja),
-                             "source": "gemini_translated", "review": ""})
-        print(f"  🌍 {min(start + cfg['batch_size'], len(src))}/{len(src)} translated")
+                             "source": "gemini_translated", "src_id": idx, "review": ""})
+        pd.DataFrame(rows).drop_duplicates("text").to_csv(out_path, index=False)  # save often
+        print(f"  🌍 {min(start + cfg['batch_size'], len(todo))}/{len(todo)} "
+              f"({len(results)} returned)")
+        time.sleep(cfg.get("pause_seconds", 0))
 
-    out = pd.DataFrame(rows).drop_duplicates("text")
-    Path(cfg["output"]).parent.mkdir(parents=True, exist_ok=True)
-    out.to_csv(cfg["output"], index=False)
-    print(f"\n✅ {len(out)} Derja examples -> {cfg['output']}")
+    out = pd.read_csv(out_path) if rows else pd.DataFrame()
+    print(f"\n✅ {len(out)} Derja examples -> {out_path}")
     print("👀 next: review them (review column: ok / fix / bad)")
 
 
