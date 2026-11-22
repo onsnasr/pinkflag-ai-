@@ -1,0 +1,9 @@
+# Translate English training examples into Tunisian Derja with Gemini (data augmentation).
+# Every output row must be reviewed by a native speaker before it's used for training.
+
+model: gemini-2.5-flash     # change here if Google renames/retires the model
+input: data/seed/seed_messages.csv
+output: data/interim/derja_translated.csv
+batch_size: 25
+variants: 2                 # Derja versions per English message
+temperature: 0.9

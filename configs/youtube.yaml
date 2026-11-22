@@ -1,0 +1,20 @@
+# Collect public comments from Tunisian YouTube videos about relationships,
+# through the official YouTube Data API v3.
+# Quota: each search costs 100 units, each page of comments costs 1 (free quota: 10,000/day).
+
+region: TN
+queries:
+  - relation toxique tunisie
+  - rajel toxique
+  - couple tunisien mochkla
+  - علاقة سامة تونس
+  - الغيرة في العلاقة تونس
+  - mra w rajelha
+  - talk show tunisien couple
+videos_per_query: 8
+comments_per_video: 200     # fetched 100 per page
+
+# Optional: video IDs you pick by hand (the part after watch?v=)
+extra_video_ids: []
+
+output: data/raw/youtube_comments.csv
