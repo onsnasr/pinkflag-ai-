@@ -1,0 +1,21 @@
+# Baseline experiment: TF-IDF (words + characters) -> Logistic Regression
+experiment: pinkflag-baseline
+seed: 42
+
+data:
+  path: data/seed/seed_messages.csv
+  cv_folds: 5
+
+features:
+  word_ngrams: [1, 2]      # catches phrases like "if you really loved me"
+  char_ngrams: [2, 5]      # catches slang + typos like "wyd", "u up", "ur"
+  sublinear_tf: true
+
+model:
+  C: 4.0
+  class_weight: balanced   # classes aren't the same size, so don't let big ones win by default
+  max_iter: 3000
+
+output:
+  model_path: models/baseline.joblib
+  report_path: reports/baseline_metrics.json

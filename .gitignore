@@ -1,0 +1,29 @@
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# ml artifacts (versioned separately, not in git)
+/models/
+/mlruns/
+/mlartifacts/
+/reports/
+/data/raw/
+/data/interim/
+
+# secrets
+.env
+*.key
+
+# os / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# local scratch, not part of the project
+/_drafts/

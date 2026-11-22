@@ -1,0 +1,186 @@
+text,label,source
+"hey, how did your interview go? i was thinking about you all day",green_flag,handwritten_v0
+"no worries if you're busy tonight, we can reschedule whenever works for you",green_flag,handwritten_v0
+"i had a really good time yesterday, would love to see you again",green_flag,handwritten_v0
+"that sounds stressful, do you want to talk about it or need some space?",green_flag,handwritten_v0
+"sorry i got upset earlier, that wasn't fair to you. can we talk?",green_flag,handwritten_v0
+have fun with your friends tonight! text me when you get home safe,green_flag,handwritten_v0
+"i respect that, take all the time you need",green_flag,handwritten_v0
+i'm proud of you for finishing that project,green_flag,handwritten_v0
+what do you feel like doing this weekend? i'm open to anything,green_flag,handwritten_v0
+good morning! hope your day goes well,green_flag,handwritten_v0
+"i hear you, that makes sense. thanks for telling me how you feel",green_flag,handwritten_v0
+"i was wrong about that, i apologize",green_flag,handwritten_v0
+"let me know when you're free, no pressure",green_flag,handwritten_v0
+"i'm running 10 minutes late, sorry! be there soon",green_flag,handwritten_v0
+"you looked so happy talking about your art, tell me more about it",green_flag,handwritten_v0
+"it's totally fine that you need a night in, rest up",green_flag,handwritten_v0
+can we find a compromise that works for both of us?,green_flag,handwritten_v0
+"i booked the restaurant you mentioned, is 8 okay?",green_flag,handwritten_v0
+thanks for being patient with me this week,green_flag,handwritten_v0
+"your boundaries matter to me, just tell me if something feels off",green_flag,handwritten_v0
+"enjoy your trip with your family, send pics if you want",green_flag,handwritten_v0
+"i noticed you seemed quiet today, everything okay?",green_flag,handwritten_v0
+"i've never felt like this about anyone, you're my soulmate and we just met",love_bombing,handwritten_v0
+"i already told my mom about you, i think we should move in together",love_bombing,handwritten_v0
+"you're perfect, literally perfect, i've been waiting my whole life for you",love_bombing,handwritten_v0
+"i bought you a ring already, i know it's only been two weeks",love_bombing,handwritten_v0
+"nobody will ever love you the way i do, we're meant to be",love_bombing,handwritten_v0
+"let's delete our dating apps today, you're the one i know it",love_bombing,handwritten_v0
+"i can't stop thinking about you every second, i need you all the time",love_bombing,handwritten_v0
+"you complete me, i was nothing before you",love_bombing,handwritten_v0
+"i planned our whole future, kids names and everything",love_bombing,handwritten_v0
+"i love you, i know it's our second date but i mean it",love_bombing,handwritten_v0
+"i'll do anything for you, anything, just say the word",love_bombing,handwritten_v0
+"we're twin flames, the universe sent you to me",love_bombing,handwritten_v0
+"i got us tickets to paris next week, you're my forever",love_bombing,handwritten_v0
+"i've never met anyone like you, you're so much better than everyone else",love_bombing,handwritten_v0
+you're the only person who has ever understood me,love_bombing,handwritten_v0
+i'm cancelling everything else in my life to be with you,love_bombing,handwritten_v0
+"let's get matching tattoos, this is forever",love_bombing,handwritten_v0
+my heart chose you the moment i saw you,love_bombing,handwritten_v0
+"that never happened, you're making things up again",gaslighting,handwritten_v0
+"you're being crazy, i never said that",gaslighting,handwritten_v0
+"you're way too sensitive, it was just a joke",gaslighting,handwritten_v0
+you're remembering it wrong as usual,gaslighting,handwritten_v0
+everyone agrees you overreact to everything,gaslighting,handwritten_v0
+"i didn't yell, you're imagining things",gaslighting,handwritten_v0
+you always twist my words to make me the bad guy,gaslighting,handwritten_v0
+"stop being so dramatic, it wasn't a big deal",gaslighting,handwritten_v0
+"you need help, normal people don't think like this",gaslighting,handwritten_v0
+"nobody else has a problem with me, it's clearly you",gaslighting,handwritten_v0
+"you're confused, we talked about this and you agreed",gaslighting,handwritten_v0
+"you're paranoid, i was obviously just at work",gaslighting,handwritten_v0
+"i never promised that, you must have dreamed it",gaslighting,handwritten_v0
+"your memory is terrible, you can't trust yourself",gaslighting,handwritten_v0
+are you sure you're not just tired and making stuff up,gaslighting,handwritten_v0
+"you're overthinking, that's not what happened at all",gaslighting,handwritten_v0
+"you're being irrational, calm down and stop inventing problems",gaslighting,handwritten_v0
+"you always do this, you rewrite history",gaslighting,handwritten_v0
+who are you texting? send me a screenshot,controlling,handwritten_v0
+you're not wearing that out tonight,controlling,handwritten_v0
+why were you online and not answering me,controlling,handwritten_v0
+"give me your password, if you have nothing to hide it's fine",controlling,handwritten_v0
+i don't want you hanging out with your friends anymore,controlling,handwritten_v0
+share your location with me 24/7 or i'll worry,controlling,handwritten_v0
+you need to ask me before you make plans,controlling,handwritten_v0
+delete his number right now,controlling,handwritten_v0
+why did it take you 5 minutes to reply? who were you with,controlling,handwritten_v0
+"i decide where we go, you don't get a say",controlling,handwritten_v0
+you can't go to that party without me,controlling,handwritten_v0
+send me a picture of who you're with right now,controlling,handwritten_v0
+you're not allowed to follow other guys on instagram,controlling,handwritten_v0
+i checked your phone while you were asleep,controlling,handwritten_v0
+"quit that job, i don't like your coworkers",controlling,handwritten_v0
+be home by 9 or don't bother coming back,controlling,handwritten_v0
+"your friends are a bad influence, cut them off",controlling,handwritten_v0
+"answer my calls immediately, every time",controlling,handwritten_v0
+"after everything i've done for you, this is how you treat me",guilt_tripping,handwritten_v0
+"fine, go have fun, i'll just sit here alone like always",guilt_tripping,handwritten_v0
+if you really loved me you would cancel your plans,guilt_tripping,handwritten_v0
+i guess i'm just not important to you,guilt_tripping,handwritten_v0
+you're the reason i'm so miserable,guilt_tripping,handwritten_v0
+i don't know what i'll do if you leave me,guilt_tripping,handwritten_v0
+"you never make time for me, i always come last",guilt_tripping,handwritten_v0
+"wow ok, i see how it is, guess i'll stop trying",guilt_tripping,handwritten_v0
+i gave up so much for you and you can't even do this one thing,guilt_tripping,handwritten_v0
+"you made me feel like garbage, hope you're happy",guilt_tripping,handwritten_v0
+my day was ruined because of you,guilt_tripping,handwritten_v0
+i cried all night because you didn't text back,guilt_tripping,handwritten_v0
+if you go out tonight don't expect me to be here,guilt_tripping,handwritten_v0
+look what you made me do,guilt_tripping,handwritten_v0
+i'll hurt myself if you break up with me,guilt_tripping,handwritten_v0
+you know how much i struggle and you still choose them over me,guilt_tripping,handwritten_v0
+i guess your friends matter more than me,guilt_tripping,handwritten_v0
+i sacrificed everything and you can't even say sorry,guilt_tripping,handwritten_v0
+lol you're so dumb sometimes,disrespect,handwritten_v0
+nobody else would put up with you,disrespect,handwritten_v0
+you'd be prettier if you lost some weight,disrespect,handwritten_v0
+"shut up, nobody asked for your opinion",disrespect,handwritten_v0
+you're lucky i even talk to you,disrespect,handwritten_v0
+"ugh you're so annoying, just stop",disrespect,handwritten_v0
+my ex was way better at this than you,disrespect,handwritten_v0
+"that's a stupid dream, get a real job",disrespect,handwritten_v0
+"whatever, i don't care about your feelings",disrespect,handwritten_v0
+"you're embarrassing me, stop talking",disrespect,handwritten_v0
+k,disrespect,handwritten_v0
+you're too much work honestly,disrespect,handwritten_v0
+you're crazy just like all my exes,disrespect,handwritten_v0
+can you not be so boring for once,disrespect,handwritten_v0
+i was flirting with her but chill it's nothing,disrespect,handwritten_v0
+your friends are losers just like you,disrespect,handwritten_v0
+you're overreacting like a typical girl,disrespect,handwritten_v0
+"you're not that special, don't act like it",disrespect,handwritten_v0
+hey stranger,breadcrumbing,handwritten_v0
+u up?,breadcrumbing,handwritten_v0
+wyd,breadcrumbing,handwritten_v0
+"sorry been busy for 3 weeks, miss you tho",breadcrumbing,handwritten_v0
+we should hang out sometime idk,breadcrumbing,handwritten_v0
+haha yeah maybe,breadcrumbing,handwritten_v0
+"can't make it tonight, maybe another time",breadcrumbing,handwritten_v0
+i'm not looking for anything serious but i like talking to you,breadcrumbing,handwritten_v0
+"let's see how it goes, no labels",breadcrumbing,handwritten_v0
+just saw this and thought of you lol,breadcrumbing,handwritten_v0
+"sorry fell asleep, talk later",breadcrumbing,handwritten_v0
+you up? come over,breadcrumbing,handwritten_v0
+i'll let you know,breadcrumbing,handwritten_v0
+"been crazy busy, i'll text you this weekend",breadcrumbing,handwritten_v0
+miss our late night talks,breadcrumbing,handwritten_v0
+"something came up, rain check?",breadcrumbing,handwritten_v0
+i don't really do relationships,breadcrumbing,handwritten_v0
+"hey you, been a while",breadcrumbing,handwritten_v0
+"i miss you, can we get dinner friday?",green_flag,handwritten_genz_v0
+ngl i've been smiling at my phone all day bc of you,green_flag,handwritten_genz_v0
+omw! want me to grab you an iced latte?,green_flag,handwritten_genz_v0
+"you ate that presentation, so proud of u",green_flag,handwritten_genz_v0
+"no rush to reply bestie, just thinking of u",green_flag,handwritten_genz_v0
+"i'm free saturday, wanna do the museum thing you mentioned?",green_flag,handwritten_genz_v0
+that was lowkey the best date i've had in forever,green_flag,handwritten_genz_v0
+text me when u land so i know ur safe,green_flag,handwritten_genz_v0
+"i got u, take ur time",green_flag,handwritten_genz_v0
+"hey i'm sorry i was short with you earlier, long day but that's not on you",green_flag,handwritten_genz_v0
+can i call you tonight? miss your voice,green_flag,handwritten_genz_v0
+u looked so good today fr,green_flag,handwritten_genz_v0
+lmk what works for u this week and i'll plan around it,green_flag,handwritten_genz_v0
+"i love that you have your own life and friends, it's attractive ngl",green_flag,handwritten_genz_v0
+"if something i said bothered you pls tell me, i wanna know",green_flag,handwritten_genz_v0
+"goodnight, sleep well ♡",green_flag,handwritten_genz_v0
+"i made reservations for thursday, hope that's cool",green_flag,handwritten_genz_v0
+how's your mom feeling? i've been thinking about her,green_flag,handwritten_genz_v0
+"bro i already know ur wifey, we met yesterday but i can feel it",love_bombing,handwritten_genz_v0
+ur literally my whole world now nobody else matters,love_bombing,handwritten_genz_v0
+"i'm not even playing we're getting married, i already picked the venue",love_bombing,handwritten_genz_v0
+"never felt this way bout anyone, ur different from every girl ever",love_bombing,handwritten_genz_v0
+"deleting hinge rn, ur it for me",love_bombing,handwritten_genz_v0
+"i want u to meet my whole family this weekend, it's been 5 days but i'm sure",love_bombing,handwritten_genz_v0
+"ur tweaking, that literally never happened",gaslighting,handwritten_genz_v0
+"it was a joke chill, why u always so pressed",gaslighting,handwritten_genz_v0
+"ur delusional fr, i never said that",gaslighting,handwritten_genz_v0
+"you're making it a whole thing for no reason, it's giving crazy",gaslighting,handwritten_genz_v0
+ok but are u sure that's what happened? bc that's not what i remember at all,gaslighting,handwritten_genz_v0
+"nah ur just insecure, i didn't do anything",gaslighting,handwritten_genz_v0
+why u posting pics without me in them,controlling,handwritten_genz_v0
+who tf is that in ur comments,controlling,handwritten_genz_v0
+turn ur location back on rn,controlling,handwritten_genz_v0
+"u not going out in that fit, change",controlling,handwritten_genz_v0
+u can't be talking to other guys period,controlling,handwritten_genz_v0
+why was ur snap score going up but u didn't reply to me,controlling,handwritten_genz_v0
+"wow so ur friends > me, noted",guilt_tripping,handwritten_genz_v0
+"guess i'll just be alone again, it's fine i'm used to it",guilt_tripping,handwritten_genz_v0
+i do everything for u and this is what i get?,guilt_tripping,handwritten_genz_v0
+if u cared u would've answered,guilt_tripping,handwritten_genz_v0
+u really gonna leave me like this after everything,guilt_tripping,handwritten_genz_v0
+"ok have fun, don't worry about me or anything",guilt_tripping,handwritten_genz_v0
+ur kinda mid without makeup ngl,disrespect,handwritten_genz_v0
+lol ur so extra nobody cares,disrespect,handwritten_genz_v0
+my ex would never do allat,disrespect,handwritten_genz_v0
+"ur not even that cute, be grateful",disrespect,handwritten_genz_v0
+stop yapping,disrespect,handwritten_genz_v0
+ur friends are lowkey ugly,disrespect,handwritten_genz_v0
+heyyy stranger 👀,breadcrumbing,handwritten_genz_v0
+wyd later,breadcrumbing,handwritten_genz_v0
+we should link fr fr (never sets a date),breadcrumbing,handwritten_genz_v0
+"my bad been mad busy, we good tho?",breadcrumbing,handwritten_genz_v0
+idk what we are but i like vibing w u,breadcrumbing,handwritten_genz_v0
+"can't tonight, maybe next week",breadcrumbing,handwritten_genz_v0
+just saw ur story haha,breadcrumbing,handwritten_genz_v0
