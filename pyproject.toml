@@ -22,6 +22,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.5"]
 tracking = ["mlflow>=2.12"]
+ml = ["torch>=2.3", "transformers>=4.44", "accelerate>=0.33", "sentencepiece>=0.2"]
 
 [project.scripts]
 pinkflag-train = "pinkflag.train:main"
