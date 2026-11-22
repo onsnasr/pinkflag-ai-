@@ -14,7 +14,7 @@ Every dataset is a CSV with three columns:
 |---|---|---|
 | `seed/seed_messages.csv` | ✅ v0 | ~185 hand-written example messages, including Gen Z slang. Fictional, good for bootstrapping, **not** for claiming real-world accuracy. |
 | Web scraping (`python -m pinkflag.scrape`) | ✅ v0 | Beautiful Soup on hand-picked advice/psychology articles listed in [`configs/sources.yaml`](../configs/sources.yaml) + TikTok captions via the official oEmbed endpoint. Respects robots.txt, 2s delay, cached. First run: 415 raw quotes from 11 sites. **Unlabeled and noisy**: includes advice sentences and "how to respond" phrases that must be filtered during labeling. Output stays in `data/raw/` (not committed). |
-| [MentalManip](https://aclanthology.org/2024.acl-long.206) (ACL 2024) | 🔜 | 4,000 multi-turn dialogues annotated for manipulation techniques + targeted vulnerabilities. From movie scripts, so formal language: we'll map its labels onto ours. |
+| [MentalManip](https://aclanthology.org/2024.acl-long.206) (ACL 2024) | ✅ converted | `python -m pinkflag.datasets.mentalmanip` → 2,513 dialogues (2,217 single-label). Mapping decisions in [`docs/LABEL_MAPPING.md`](../docs/LABEL_MAPPING.md). | 4,000 multi-turn dialogues annotated for manipulation techniques + targeted vulnerabilities. From movie scripts, so formal language: we'll map its labels onto ours. |
 | Synthetic Gen Z conversations | 🔜 | Full conversations generated from patterns we see discussed on TikTok (we write down the *patterns*, we don't scrape TikTok). Every synthetic row gets human review. |
 | Donated screenshots | 🔜 | Opt-in only, names/numbers blurred, consent recorded. This is the only set we'll trust as a **real-world test set**. |
 
