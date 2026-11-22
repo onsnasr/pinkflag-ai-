@@ -26,6 +26,7 @@
 | ⛓️ | **controlling** | location checks, phone checks, "you're not wearing that" |
 | 😢 | **guilt tripping** | "after everything i've done for you..." |
 | 🙄 | **disrespect** | negging, insults, comparing you to his ex |
+| 😡 | **intimidation / anger** | threats, CAPS-LOCK rage, "you'll regret this" |
 | 🍞 | **breadcrumbing** | "wyd" at 2am, "we should link fr" with no date ever |
 
 Full definitions (what labelers follow) live in [`src/pinkflag/taxonomy.py`](src/pinkflag/taxonomy.py).
@@ -64,12 +65,12 @@ flowchart LR
 
 ## 📈 current results (v0.1 baseline)
 
-TF-IDF (words + characters) → Logistic Regression, 5-fold cross-validation on 185 hand-written messages:
+TF-IDF (words + characters) → Logistic Regression, 5-fold cross-validation on 199 hand-written messages:
 
 | task | accuracy | macro-F1 |
 |---|---|---|
-| red flag vs green | 84% | 0.78 |
-| which of the 7 types | 62% | 0.61 |
+| red flag vs green | 85% | 0.78 |
+| which of the 8 types | 57% | 0.54 |
 
 > ⚠️ **Read this before you get excited:** every message here was written by us, so these scores measure how well the model copies *our* writing style, not how well it works on real texts. A real-world test set is on the roadmap.
 

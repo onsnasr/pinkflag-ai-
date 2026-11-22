@@ -51,6 +51,11 @@ LABELS: dict[str, Label] = {
             "feelings with contempt.",
         ),
         Label(
+            "intimidation", "😡", "intimidation / anger",
+            "Threats, angry outbursts or scare tactics meant to make you comply: "
+            "yelling in caps, 'you'll regret this', threats to leave, expose or hurt.",
+        ),
+        Label(
             "breadcrumbing", "🍞", "breadcrumbing / time waster",
             "Low-effort, inconsistent attention that keeps you interested without "
             "commitment: late-night 'wyd', vague plans, disappearing and reappearing.",
