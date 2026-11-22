@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PinkFlag</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sidebar: #5A2340;
+    --sidebar-text: #F9DCE6;
+    --hero: #8E3B5E;
+    --accent: #F4B6C8;
+    --accent-strong: #E88FAB;
+    --page: #FFF5F8;
+    --card: #FFFFFF;
+    --border: #F2D9E2;
+    --text: #2B1A22;
+    --muted: #7A5A68;
+    --red: #D7263D;
+    --red-bg: #FDECEE;
+    --green: #3E8E6E;
+    --green-bg: #EAF6F0;
+    --serif: "Fraunces", Georgia, "Times New Roman", serif;
+    --sans: "Inter", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--text); font-family: var(--sans); }
+  .app { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+
+  /* sidebar */
+  aside { background: var(--sidebar); color: var(--sidebar-text); padding: 32px 22px; }
+  .logo { font-size: 30px; margin-bottom: 6px; }
+  .brand { font-family: var(--serif); font-size: 34px; color: #fff; margin: 0; }
+  .tagline { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; opacity: .8; margin: 6px 0 36px; }
+  nav a { display: flex; gap: 12px; align-items: center; padding: 13px 16px; border-radius: 10px;
+          color: var(--sidebar-text); text-decoration: none; font-size: 16px; margin-bottom: 6px; }
+  nav a:hover { background: rgba(255,255,255,.08); }
+  nav a.active { background: var(--accent); color: var(--sidebar); font-weight: 600; }
+
+  /* main */
+  main { padding: 40px 48px 120px; max-width: 1200px; }
+  h1.greet { font-family: var(--serif); font-weight: 400; font-size: 46px; margin: 0; }
+  .date { color: var(--muted); margin: 6px 0 30px; }
+
+  .hero { background: var(--hero); color: #fff; border-radius: 18px; padding: 44px 40px;
+          position: relative; overflow: hidden; }
+  .hero::after { content: "🚩"; position: absolute; right: 40px; top: 26px; font-size: 120px; opacity: .15; transform: rotate(12deg); }
+  .eyebrow { color: var(--accent); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; font-weight: 600; }
+  .hero h2 { font-family: var(--serif); font-weight: 400; font-size: 42px; line-height: 1.15; margin: 16px 0 12px; max-width: 640px; }
+  .hero p { opacity: .9; margin: 0 0 26px; font-size: 17px; }
+  .btn { display: inline-block; background: var(--accent); color: var(--sidebar); border: 0; border-radius: 10px;
+         padding: 14px 26px; font: 600 16px var(--sans); cursor: pointer; }
+  .btn:hover { background: var(--accent-strong); }
+  .btn.ghost { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.5); margin-left: 10px; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 26px 0 40px; }
+  .stat { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px 24px; }
+  .stat .label { color: var(--muted); font-size: 14px; }
+  .stat .num { font-family: var(--serif); font-size: 40px; margin: 12px 0 4px; }
+  .stat .sub { color: var(--muted); font-size: 13px; }
+
+  h3.section { font-family: var(--serif); font-weight: 400; font-size: 30px; margin: 0 0 6px; }
+  .verdict { display: inline-flex; gap: 8px; align-items: center; background: var(--red-bg); color: var(--red);
+             border-radius: 999px; padding: 6px 14px; font-weight: 600; font-size: 14px; margin-bottom: 18px; }
+
+  .chat { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px; display: grid; gap: 14px; }
+  .msg { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: start; padding: 14px 16px;
+         border-radius: 12px; border: 1px solid var(--border); }
+  .msg.flag { background: var(--red-bg); border-color: #F6C3CA; }
+  .msg.good { background: var(--green-bg); border-color: #CBE7DA; }
+  .who { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 4px; }
+  .text { font-size: 16px; }
+  .chip { white-space: nowrap; font-size: 13px; font-weight: 600; border-radius: 999px; padding: 6px 12px; background: #fff; border: 1px solid var(--border); }
+  .chip.red { color: var(--red); }
+  .chip.green { color: var(--green); }
+  .conf { display: block; text-align: right; color: var(--muted); font-size: 12px; margin-top: 6px; }
+
+  /* floating assistant */
+  .assistant { position: fixed; right: 28px; bottom: 28px; width: 360px; background: var(--card);
+               border-radius: 18px; box-shadow: 0 20px 50px rgba(90,35,64,.25); overflow: hidden; border: 1px solid var(--border); }
+  .assistant header { background: var(--sidebar); color: #fff; display: flex; gap: 12px; align-items: center; padding: 16px 18px; }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; font-size: 20px; }
+  .assistant header b { display: block; }
+  .assistant header small { opacity: .8; }
+  .bubble { margin: 16px; background: #FBEFF3; border-radius: 14px; padding: 14px 16px; font-size: 14px; line-height: 1.5; }
+  .ask { display: flex; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--border); }
+  .ask input { flex: 1; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font: 14px var(--sans); }
+  .ask button { border: 0; background: var(--hero); color: #fff; border-radius: 10px; width: 42px; font-size: 16px; cursor: pointer; }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    aside { padding: 18px 16px; }
+    nav { display: flex; overflow-x: auto; gap: 6px; }
+    nav a { margin: 0; white-space: nowrap; }
+    .tagline { margin-bottom: 14px; }
+    main { padding: 24px 16px 140px; }
+    .stats { grid-template-columns: 1fr; }
+    .hero h2 { font-size: 30px; }
+    .assistant { left: 16px; right: 16px; width: auto; bottom: 16px; }
+    .assistant .bubble { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="logo">🎀</div>
+    <p class="brand">PinkFlag</p>
+    <p class="tagline">your AI big sister</p>
+    <nav>
+      <a class="active" href="#">💬 Check a chat</a>
+      <a href="#">🗂️ History</a>
+      <a href="#">🚩 Red flag guide</a>
+      <a href="#">💚 Green flags</a>
+      <a href="#">🌍 Language</a>
+      <a href="#">ℹ️ About</a>
+    </nav>
+  </aside>
+
+  <main>
+    <h1 class="greet">Hey bestie.</h1>
+    <p class="date">Let's look at those texts together.</p>
+
+    <section class="hero">
+      <div class="eyebrow">Get the receipts</div>
+      <h2>Is he husband material 💍 or a walking red flag 🚩?</h2>
+      <p>Drop a screenshot of the convo. PinkFlag reads every message and tells you what's really going on.</p>
+      <button class="btn">📸 Upload the screenshot</button>
+      <button class="btn ghost">Paste text instead</button>
+    </section>
+
+    <section class="stats">
+      <div class="stat"><div class="label">Messages analysed</div><div class="num">6</div><div class="sub">from 1 screenshot</div></div>
+      <div class="stat"><div class="label">Red flags</div><div class="num">3</div><div class="sub">controlling · gaslighting · guilt tripping</div></div>
+      <div class="stat"><div class="label">Green flags</div><div class="num">1</div><div class="sub">at least he said goodnight</div></div>
+    </section>
+
+    <h3 class="section">The verdict</h3>
+    <div class="verdict">🚩 Walking red flag · 3 of 6 messages flagged</div>
+
+    <section class="chat">
+      <div class="msg flag">
+        <div><div class="who">him · 23:41</div><div class="text">where are you rn? send me your location</div></div>
+        <div><span class="chip red">⛓️ controlling</span><span class="conf">91% sure</span></div>
+      </div>
+      <div class="msg">
+        <div><div class="who">you · 23:42</div><div class="text">at sarra's, told you this morning 😅</div></div>
+        <div><span class="chip">you</span></div>
+      </div>
+      <div class="msg flag">
+        <div><div class="who">him · 23:44</div><div class="text">you never told me that, you're making things up again</div></div>
+        <div><span class="chip red">🔥 gaslighting</span><span class="conf">84% sure</span></div>
+      </div>
+      <div class="msg flag">
+        <div><div class="who">him · 23:45</div><div class="text">fine have fun, i'll just sit here alone like always</div></div>
+        <div><span class="chip red">😢 guilt tripping</span><span class="conf">88% sure</span></div>
+      </div>
+      <div class="msg good">
+        <div><div class="who">him · 00:10</div><div class="text">goodnight, text me when you're home safe</div></div>
+        <div><span class="chip green">💚 green flag</span><span class="conf">76% sure</span></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="assistant">
+  <header>
+    <div class="avatar">🎀</div>
+    <div><b>Ask PinkFlag</b><small>your big sister, on call</small></div>
+  </header>
+  <div class="bubble">
+    okay bestie 😮‍💨 he asked for your location <b>after</b> you told him where you'd be,
+    then said you "made it up". That's not cute, that's a pattern.<br><br>
+    Want help writing a reply, or should we talk about what you want here?
+  </div>
+  <div class="ask"><input placeholder="Ask about this chat..."><button>➤</button></div>
+</div>
+</body>
+</html>
