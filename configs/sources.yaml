@@ -1,0 +1,41 @@
+# Scraping config: which pages to read and how politely.
+# Articles were picked by hand: public advice/psychology pages that quote example
+# phrases. Pages whose robots.txt disallows us are skipped automatically.
+
+user_agent: "research-scraper/0.1 (educational ML project; respects robots.txt)"
+delay_seconds: 2.0            # wait between requests to the same site
+cache_dir: data/raw/cache     # pages are downloaded once, then read from here
+output_dir: data/raw
+
+articles:
+  # gaslighting
+  - https://www.marriage.com/advice/mental-health/gaslighting-red-flag-phrases/
+  - https://www.marriage.com/advice/mental-health/gaslighting-phrases-in-relationships/
+  - https://paired.com/articles/gaslighting-phrases
+  - https://www.simplypsychology.org/examples-of-gaslighting-phrases.html
+  - https://www.thehealthy.com/family/relationships/gaslighting-phrases/
+  - https://choosingtherapy.com/gaslighting-phrases
+  - https://purewow.com/wellness/gaslighting-phrases
+  - https://momjunction.com/articles/common-gaslighting-phrases_00796273
+  - https://www.mindbodygreen.com/articles/examples-of-gaslighting
+  # breadcrumbing
+  - https://www.paired.com/articles/what-is-breadcrumbing
+  - https://www.marriage.com/advice/relationship/what-is-breadcrumbing
+  - https://www.thehealthy.com/family/relationships/breadcrumbing/
+  - https://health.clevelandclinic.org/breadcrumbing/
+  - https://therapist.com/relationships/breadcrumbing/
+  # love bombing
+  - https://www.healthline.com/health/love-bombing
+  - https://www.theknot.com/content/love-bombing
+  - https://www.joinonelove.org/learn/a-comprehensive-guide-to-love-bombing/
+  # guilt tripping
+  - https://health.clevelandclinic.org/guilt-tripping-definition-and-examples
+  - https://graziamagazine.com/us/articles/these-11-phrases-brilliant-manipulators-use-to-guilt-trip-you-and-the-boundaries-that-disarm-them/
+  # controlling / toxic texting
+  - https://www.marriage.com/advice/narcissism/examples-of-narcissist-text-messages/
+  - https://yourtango.com/heartbreak/toxic-texts-relationships
+  - https://bestlifeonline.com/red-flags-emojis-partner-texting-news/
+
+# Optional: TikTok video links you collect by hand while scrolling.
+# Their captions + hashtags are fetched through TikTok's official oEmbed endpoint.
+tiktok_videos: []
