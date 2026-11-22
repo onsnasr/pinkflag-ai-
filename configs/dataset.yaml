@@ -1,0 +1,23 @@
+# How the training dataset is assembled from every source.
+seed: 42
+output_dir: data/processed
+
+sources:
+  handwritten:   data/seed/seed_messages.csv           # gold labels, English
+  scraped:       data/interim/scraped_weak_labels.csv  # weak labels, English
+  mentalmanip:   data/interim/mentalmanip.csv          # dataset labels, dialogues
+  derja_mt:      data/interim/derja_translated.csv     # machine-translated Derja
+  derja_gold:    data/seed/derja_examples.csv          # hand-written Derja: TEST ONLY
+
+# Big sources would drown the small ones: cap rows per (source, label).
+cap_per_source_label:
+  mentalmanip: 250
+  scraped: 60
+
+# Translations marked "bad" in review are always dropped.
+# Unreviewed translations are kept for now but tagged label_quality=unreviewed.
+use_unreviewed_translations: true
+
+split:
+  val: 0.15
+  test: 0.15

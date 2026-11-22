@@ -12,6 +12,7 @@ from pathlib import Path
 
 import joblib
 import numpy as np
+import pandas as pd
 import yaml
 from sklearn.metrics import classification_report, f1_score
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
@@ -63,6 +64,51 @@ def print_summary(metrics: dict, learned: dict) -> None:
     print()
 
 
+def score(model, df) -> dict:
+    """Accuracy + macro-F1 for the type and for red-flag-or-not."""
+    pred = model.predict(df.text)
+    red_true, red_pred = df.label != GREEN, pred != GREEN
+    return {"n": len(df),
+            "type_accuracy": float((pred == df.label).mean()),
+            "type_macro_f1": float(f1_score(df.label, pred, average="macro", zero_division=0)),
+            "red_flag_accuracy": float((red_true == red_pred).mean()),
+            "per_label_f1": dict(zip(sorted(df.label.unique()), f1_score(
+                df.label, pred, average=None, labels=sorted(df.label.unique()),
+                zero_division=0).round(2).tolist()))}
+
+
+def train_on_splits(cfg: dict):
+    d = cfg["data"]
+    train, val, test = (pd.read_csv(d[k]) for k in ("train", "val", "test"))
+    model = build_pipeline(cfg).fit(train.text, train.label)
+
+    metrics = {"train_rows": len(train), "val": score(model, val), "test": score(model, test)}
+    # slices: where does the model do well / badly?
+    metrics["test_by_source"] = {s: score(model, g) for s, g in test.groupby("source")}
+    metrics["test_by_lang"] = {s: score(model, g) for s, g in test.groupby("lang")}
+    derja_gold = Path(d.get("test_derja", ""))
+    if derja_gold.is_file() and derja_gold.stat().st_size:
+        gold = pd.read_csv(derja_gold)
+        if len(gold):
+            metrics["test_derja_gold"] = score(model, gold)
+
+    print(f"\n📊 trained on {len(train)} rows")
+    for name in ["val", "test"]:
+        m = metrics[name]
+        print(f"   {name:5s} type acc {m['type_accuracy']:.0%}  macro-F1 {m['type_macro_f1']:.2f}"
+              f"  | red-flag acc {m['red_flag_accuracy']:.0%}")
+    print("\n🔍 test, sliced:")
+    for group in ["test_by_source", "test_by_lang"]:
+        for k, m in metrics[group].items():
+            print(f"   {k:14s} n={m['n']:4d}  type acc {m['type_accuracy']:.0%}"
+                  f"  red-flag acc {m['red_flag_accuracy']:.0%}")
+    if "test_derja_gold" in metrics:
+        m = metrics["test_derja_gold"]
+        print(f"   {'derja (gold)':14s} n={m['n']:4d}  type acc {m['type_accuracy']:.0%}")
+    print("\n🏷️  test F1 per label:", metrics["test"]["per_label_f1"], "\n")
+    return model, metrics
+
+
 def log_mlflow(cfg: dict, metrics: dict, model_path: Path) -> None:
     try:
         import mlflow
@@ -74,11 +120,14 @@ def log_mlflow(cfg: dict, metrics: dict, model_path: Path) -> None:
     with mlflow.start_run():
         mlflow.log_params({"C": cfg["model"]["C"],
                            "word_ngrams": str(cfg["features"]["word_ngrams"]),
-                           "char_ngrams": str(cfg["features"]["char_ngrams"]),
-                           "n_messages": metrics["n_messages"]})
-        mlflow.log_metrics({"type_macro_f1": metrics["type"]["macro_f1"],
-                            "type_accuracy": metrics["type"]["accuracy"],
-                            "red_flag_macro_f1": metrics["red_flag"]["macro_f1"]})
+                           "char_ngrams": str(cfg["features"]["char_ngrams"])})
+        flat = {}
+        for section, values in metrics.items():
+            if isinstance(values, dict):
+                for k, v in values.items():
+                    if isinstance(v, (int, float)):
+                        flat[f"{section}_{k}"] = v
+        mlflow.log_metrics(flat)
         mlflow.log_artifact(str(model_path))
     print("✅ run logged to MLflow (view with: mlflow ui)")
 
@@ -91,12 +140,14 @@ def main(argv=None) -> None:
     args = parser.parse_args(argv)
 
     cfg = yaml.safe_load(Path(args.config).read_text(encoding="utf-8"))
-    df = load_messages(cfg["data"]["path"])
 
-    metrics = evaluate(cfg, df)
-    model = build_pipeline(cfg).fit(df.text, df.label)
-    learned = top_features(model)
-    print_summary(metrics, learned)
+    if "train" in cfg["data"]:  # merged dataset with fixed train / val / test splits
+        model, metrics = train_on_splits(cfg)
+    else:                       # small dataset: cross-validation
+        df = load_messages(cfg["data"]["path"])
+        metrics = evaluate(cfg, df)
+        model = build_pipeline(cfg).fit(df.text, df.label)
+        print_summary(metrics, top_features(model))
 
     model_path = Path(cfg["output"]["model_path"])
     model_path.parent.mkdir(parents=True, exist_ok=True)

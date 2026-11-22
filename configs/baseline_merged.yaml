@@ -1,0 +1,23 @@
+# Baseline on the merged dataset (python -m pinkflag.build_dataset first)
+experiment: pinkflag-baseline-merged
+seed: 42
+
+data:
+  train: data/processed/train.csv
+  val: data/processed/val.csv
+  test: data/processed/test.csv
+  test_derja: data/processed/test_derja.csv
+
+features:
+  word_ngrams: [1, 2]
+  char_ngrams: [2, 5]
+  sublinear_tf: true
+
+model:
+  C: 4.0
+  class_weight: balanced
+  max_iter: 3000
+
+output:
+  model_path: models/baseline_merged.joblib
+  report_path: reports/baseline_merged_metrics.json

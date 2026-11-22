@@ -72,6 +72,17 @@ TF-IDF (words + characters) → Logistic Regression, 5-fold cross-validation on 
 | red flag vs green | 85% | 0.78 |
 | which of the 8 types | 57% | 0.54 |
 
+**v0.2 merged dataset** (handwritten + scraped + MentalManip + machine-translated Derja, group-aware split, 1,416 train rows), same baseline:
+
+| test set | type accuracy | red flag vs green |
+|---|---|---|
+| all | 46% | 79% |
+| English | 48% | 79% |
+| Derja (translated) | 38% | 79% |
+| MentalManip dialogues | 43% | 77% |
+
+Scores dropped vs v0.1, and that's the point: real, varied data exposes what word-counting can't do. Next: a multilingual transformer.
+
 > ⚠️ **Read this before you get excited:** every message here was written by us, so these scores measure how well the model copies *our* writing style, not how well it works on real texts. A real-world test set is on the roadmap.
 
 ## 🛣️ roadmap
