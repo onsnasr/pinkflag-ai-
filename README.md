@@ -4,7 +4,7 @@
 
 ### your AI big sister for safer dating 🚩💅
 
-**NLP + deep learning + LLM agent that detects manipulation and red flags in dating chats**
+**Get the receipts 💅 End-to-end NLP system: web scraping → multi-dataset training → fine-tuned DeBERTa → LLM agent that explains manipulation patterns**
 
 *paste a message (or soon, a screenshot of the whole convo) → PinkFlag tells you if it's giving 💚 green flag or 🚩 red flag, what kind, and why*
 

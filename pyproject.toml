@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pinkflag"
 version = "0.1.0"
-description = "PinkFlag: your big-sister ML that reads the texts and spots the red flags 🎀"
+description = "Get the receipts: end-to-end NLP system (web scraping, multi-dataset training, fine-tuned DeBERTa, LLM agent) that explains manipulation patterns in dating chats"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
