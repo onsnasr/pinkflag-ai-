@@ -49,7 +49,11 @@ Each version has one clear goal and one thing you learn from building it.
 - **You learn:** speech-to-text, text-to-speech, audio in web apps
 
 ## v1.0 Ship it 🚀
-- Deploy (Hugging Face Spaces / Render / Vercel)
+- **Free public hosting** on Hugging Face Spaces (one link any girl can open on her phone)
+  - fair-use limit per person (Gemini free quota), no chats stored on the server by default,
+    privacy note, "Sisi isn't a therapist" note + help resources
+- **Demo video (~60s):** script + storyboard → automated screen recording of the app →
+  Ons's own voiceover → combined with ffmpeg (captions + music optional)
 - Feedback loop: "was Sisi right? 👍👎" → new labeled data → retrain
 - Model card: what it's trained on, where it fails, who shouldn't rely on it
 - Privacy: chats stay private, one-tap "delete everything"
