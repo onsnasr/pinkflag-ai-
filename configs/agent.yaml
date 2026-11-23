@@ -1,4 +1,8 @@
 # Sisi, the PinkFlag agent
-model: gemini-flash-lite-latest   # free tier friendly; switch to gemini-flash-latest for better replies
+# Models are tried in order: if one is overloaded (503) after retries, the next one answers.
+models:
+  - gemini-flash-lite-latest
+  - gemini-3.1-flash-lite
+  - gemini-flash-latest
 history_turns: 30                 # how many past messages she re-reads each turn
 memory_path: data/agent/sisi.db   # local SQLite, gitignored

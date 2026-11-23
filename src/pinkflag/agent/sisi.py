@@ -6,6 +6,7 @@ One turn:
   3. if Gemini answers with a function call -> run the tool -> send the result back -> repeat
   4. when Gemini answers with text -> that's Sisi's reply; save it to memory
 """
+import time
 from collections.abc import Callable
 
 import requests
@@ -20,14 +21,32 @@ MAX_TOOL_STEPS = 6
 Transport = Callable[[dict], dict]  # request body -> response JSON (swappable for tests)
 
 
-def gemini_transport(key: str, model: str, timeout: int = 120) -> Transport:
+RETRY_STATUS = {429, 500, 502, 503, 504}  # busy / overloaded: worth retrying
+
+
+def gemini_transport(key: str, model: str | list[str], timeout: int = 120,
+                     retries: int = 3) -> Transport:
+    """Send a request to Gemini, retrying when Google is busy and falling back to the
+    next model in the list if one stays unavailable."""
     session = requests.Session()
+    models = [model] if isinstance(model, str) else list(model)
 
     def send(body: dict) -> dict:
-        resp = session.post(API.format(model=model), headers={"x-goog-api-key": key},
-                            json=body, timeout=timeout)
-        resp.raise_for_status()
-        return resp.json()
+        last_err = None
+        for name in models:
+            for attempt in range(retries):
+                try:
+                    resp = session.post(API.format(model=name), headers={"x-goog-api-key": key},
+                                        json=body, timeout=timeout)
+                except (requests.Timeout, requests.ConnectionError) as err:
+                    last_err = err
+                else:
+                    if resp.status_code not in RETRY_STATUS:
+                        resp.raise_for_status()
+                        return resp.json()
+                    last_err = requests.HTTPError(f"{resp.status_code} from {name}")
+                time.sleep(2 * (attempt + 1))
+        raise last_err
 
     return send
 

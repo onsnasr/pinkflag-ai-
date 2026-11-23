@@ -38,7 +38,7 @@ def main(argv=None) -> None:
         print(f"   🔧 {name}({json.dumps(call_args, ensure_ascii=False)[:120]})")
         print(f"      → {json.dumps(result, ensure_ascii=False)[:300]}")
 
-    sisi = Sisi(gemini_transport(get_key("GEMINI_API_KEY"), cfg["model"]), memory, tools,
+    sisi = Sisi(gemini_transport(get_key("GEMINI_API_KEY"), cfg["models"]), memory, tools,
                 session=args.session, history_turns=cfg["history_turns"],
                 on_tool=show if args.show_tools else None)
 
