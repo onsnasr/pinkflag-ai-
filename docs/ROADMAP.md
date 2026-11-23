@@ -61,6 +61,11 @@ Each version has one clear goal and one thing you learn from building it.
   English / French / Derja mixes (fallback: the browser's built-in speech recognition for English)
 - **Sisi speaks back:** text-to-speech with a warm big-sister voice, ▶️ button on her replies
 - Optional: local **Whisper** on the GPU for private transcription
+- **📞 Call Sisi:** a real voice call with her
+  - level 1 (free): push-to-talk with the browser's speech recognition + voice
+  - level 2 (free): hands-free, she detects when you stop talking
+  - level 3: real-time conversation with the **Gemini Live API** (free tier for the demo,
+    you can interrupt her like a real call); fully private alternative: Whisper + Piper on the GPU
 - **You learn:** speech-to-text, text-to-speech, audio in web apps
 
 ## v1.0 Ship it 🚀

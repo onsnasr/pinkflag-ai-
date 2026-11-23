@@ -150,6 +150,28 @@
   .reveal.show { display: flex; }
   .reveal .avatar { width: 44px; height: 44px; flex: none; }
 
+  /* call sisi */
+  .call-btn { margin-left: auto; border: 0; background: var(--green); color: #fff; border-radius: 999px; padding: 10px 18px; font: 600 15px var(--sans); cursor: pointer; box-shadow: 0 6px 16px rgba(62,142,110,.3); }
+  .call { position: fixed; inset: 0; z-index: 30; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+          background: radial-gradient(circle at 50% 35%, #8E3B5E, #5A2340 70%); color: #fff; text-align: center; padding: 24px; }
+  .call.open { display: flex; }
+  .call .big { width: 170px; height: 170px; position: relative; }
+  .call .big svg { width: 100%; height: 100%; border-radius: 50%; position: relative; z-index: 1; }
+  .call .big::before, .call .big::after { content: ""; position: absolute; inset: -14px; border-radius: 50%; border: 3px solid rgba(244,182,200,.6); animation: ring 2s infinite; }
+  .call .big::after { animation-delay: 1s; }
+  @keyframes ring { from { transform: scale(.9); opacity: 1; } to { transform: scale(1.35); opacity: 0; } }
+  .call h2 { font-family: var(--serif); font-weight: 400; font-size: 38px; margin: 10px 0 0; }
+  .call .state { opacity: .85; font-size: 16px; min-height: 22px; }
+  .wave { display: flex; gap: 5px; align-items: center; height: 40px; }
+  .wave i { width: 6px; border-radius: 3px; background: var(--pink); animation: wave 1s ease-in-out infinite; }
+  .wave i:nth-child(odd) { animation-delay: .2s; } .wave i:nth-child(3n) { animation-delay: .4s; }
+  @keyframes wave { 0%,100% { height: 8px; } 50% { height: 38px; } }
+  .caption { max-width: 520px; background: rgba(255,255,255,.1); border-radius: 16px; padding: 14px 18px; font-size: 16px; line-height: 1.5; }
+  .call-actions { display: flex; gap: 22px; margin-top: 10px; }
+  .call-actions button { width: 64px; height: 64px; border-radius: 50%; border: 0; font-size: 24px; cursor: pointer; }
+  .mute { background: rgba(255,255,255,.18); color: #fff; }
+  .hang { background: #E5484D; color: #fff; }
+
   /* phone */
   @media (max-width: 900px) {
     .split { grid-template-columns: 1fr; }
@@ -215,6 +237,7 @@
           <h1>Sisi</h1>
           <p><span class="dot"></span>your big sister · I'll always pick up, unlike him 📞</p>
         </div>
+        <button class="call-btn" id="callBtn" title="Call Sisi">📞 Call Sisi</button>
       </div>
 
       <div class="thread" id="thread">
@@ -359,6 +382,40 @@
     </div>
   </div>
 </div>
+
+<!-- CALL SISI: voice call screen (design preview) -->
+<div class="call" id="call">
+  <div class="big"><svg><use href="#sisi"/></svg></div>
+  <h2>Sisi</h2>
+  <div class="state" id="callState">calling…</div>
+  <div class="wave" id="wave" style="visibility:hidden"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="caption" id="caption" style="visibility:hidden"></div>
+  <div class="call-actions">
+    <button class="mute" title="Mute">🎙️</button>
+    <button class="hang" id="hang" title="Hang up">📞</button>
+  </div>
+</div>
+
+<script>
+  // call sisi: ringing → she picks up → live captions of what she says
+  const call = document.getElementById("call");
+  const lines = [
+    "heyy babe, I'm here 💕 talk to me, what happened?",
+    "mm-hm… he asked for your location again?",
+    "okay, take a breath. you didn't do anything wrong. let's figure out what you want to say to him."
+  ];
+  let callTimers = [];
+  document.getElementById("callBtn").onclick = () => {
+    call.classList.add("open");
+    const state = document.getElementById("callState"), wave = document.getElementById("wave"), cap = document.getElementById("caption");
+    state.textContent = "calling…"; wave.style.visibility = cap.style.visibility = "hidden";
+    callTimers.push(setTimeout(() => {
+      state.textContent = "00:01 · Sisi is talking"; wave.style.visibility = cap.style.visibility = "visible";
+      lines.forEach((l, i) => callTimers.push(setTimeout(() => { cap.textContent = l; }, i * 3200)));
+    }, 1800));
+  };
+  document.getElementById("hang").onclick = () => { call.classList.remove("open"); callTimers.forEach(clearTimeout); callTimers = []; };
+</script>
 
 <script>
   // roster: open/close + the dice "rolls" through the guys and lands on the best vibe score
