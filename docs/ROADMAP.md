@@ -3,46 +3,54 @@
 Each version has one clear goal and one thing you learn from building it.
 
 ## v0.1 Baseline ✅
-- Taxonomy of 7 labels with written definitions
-- Seed dataset (185 hand-written messages, Gen Z slang included)
+- Taxonomy of 8 labels with written definitions
+- Hand-written seed dataset (Gen Z slang included)
 - TF-IDF + Logistic Regression, cross-validated metrics
 - Tests + GitHub Actions CI
 - **You learn:** text → numbers, why a simple baseline comes first, how cross-validation keeps you honest
 
-## v0.2 Real data
-- Ingest **MentalManip** (ACL 2024, 4k annotated manipulative dialogues) and map its labels to ours
-- Generate synthetic **Gen Z conversations** (multi-turn, not single texts) from patterns written down from TikTok discussions; human review every row
-- Write a **labeling guide** with examples + edge cases; label a sample twice and measure agreement (Cohen's kappa)
-- Version data with **DVC**
-- **You learn:** data is the model; label noise; why test data must come from a different source
+## v0.2 Real data ✅
+- Responsible web scraping (Beautiful Soup, robots.txt, rate limit, cache) + weak labeling
+- **MentalManip** (ACL 2024) converted, label mapping documented
+- Tunisian Derja: TSAC + TUNIZI, YouTube Data API, Gemini translation (data augmentation)
+- One merged dataset with group-aware train / val / test splits (no leakage)
+- **You learn:** data is the model; label noise; licenses; leakage
 
-## v0.3 Better models + experiment tracking
-- Sentence-embedding model + classifier
-- Fine-tuned **DeBERTa-v3-small**, multi-label (a message can be guilt-tripping *and* controlling)
-- **Probability calibration**, so "80%" actually means right 80% of the time
-- **MLflow** for every run: params, metrics, artifacts; compare models side by side
-- Compare against an LLM with no training (zero-shot)
-- **You learn:** transfer learning, multi-label, calibration, experiment tracking
+## v0.3 Sisi, the agent ✅ (terminal)
+- Gemini + function calling: `analyze_messages` (our model), `explain_flag`, `remember`, `safety_resources`
+- Persona: warm big sister, Gen Z voice, replies in the user's language, never diagnoses people
+- Memory: conversation + long-term notes in SQLite
+- Retries + fallback models when the API is busy
+- **You learn:** tool use, prompt design, grounding an LLM in your own model, agent memory
 
-## v0.4 Screenshot reader
-- Option A: OCR (PaddleOCR / Tesseract) + bubble position → who's speaking
-- Option B: vision LLM reads the screenshot directly
-- Build a small labeled set of screenshots and measure both
-- **You learn:** CV pipelines, evaluating extraction accuracy
+## v0.4 Transformer + experiment tracking ⏳
+- Fine-tune **XLM-RoBERTa** (multilingual) on the merged dataset; compare with the baseline
+- Plug the better model into Sisi's `analyze_messages`
+- **MLflow** for every run; **DVC** pipeline (`dvc repro` from scraping to training)
+- Later: multi-label, probability calibration, whole-conversation classification
+- **You learn:** transfer learning, deep learning in PyTorch, experiment tracking
 
-## v0.5 PinkFlag agent
-- LLM agent with tools: `classify_messages`, `explain_flags`, `conversation_summary`
-- Persona: warm big-sister energy, Gen Z voice, always shows receipts (quotes the exact messages)
-- Guardrails: never diagnoses people, points to help resources when something is serious
-- **You learn:** tool use, prompt design, grounding answers in model outputs
-
-## v0.6 Pink web app
-- **FastAPI** backend (`/analyze` text + image), Docker
-- **Next.js** frontend: upload, verdict cards, highlighted receipts
+## v0.5 Chat app 💖
+- Design: `web/mockup/chat.html`: the Sisi conversation takes the screen, "receipts" panel on the side, one case file per guy
+- **FastAPI** backend (`/chat` with streaming, `/upload` for screenshots), Docker
+- Frontend built from the mockup; Sisi's avatar (brown hair, glasses) with a few expressions
 - **You learn:** serving ML, APIs, frontend
 
-## v1.0 Ship it
+## v0.6 Screenshots 📸
+- Gemini vision reads the screenshot: messages + who said what (left/right bubbles)
+- Optional comparison with OCR (PaddleOCR / Tesseract)
+- **You learn:** multimodal models, evaluating extraction accuracy
+
+## v0.7 Voice 🎙️🔊
+- **Voice notes in:** mic button in the chat box; the recorded audio goes to Gemini, which understands
+  English / French / Derja mixes (fallback: the browser's built-in speech recognition for English)
+- **Sisi speaks back:** text-to-speech with a warm big-sister voice, ▶️ button on her replies
+- Optional: local **Whisper** on the GPU for private transcription
+- **You learn:** speech-to-text, text-to-speech, audio in web apps
+
+## v1.0 Ship it 🚀
 - Deploy (Hugging Face Spaces / Render / Vercel)
-- Monitoring: prediction drift, user feedback ("was PinkFlag right?") → new labeled data
+- Feedback loop: "was Sisi right? 👍👎" → new labeled data → retrain
 - Model card: what it's trained on, where it fails, who shouldn't rely on it
+- Privacy: chats stay private, one-tap "delete everything"
 - **You learn:** the MLOps loop: data → train → deploy → monitor → retrain
