@@ -39,6 +39,7 @@ Each version has one clear goal and one thing you learn from building it.
 ## v0.5b The roster 💌 (compare the guys)
 - One **case file per guy**, with a status she picks: talking stage · situationship · dating ·
   it's complicated · ex · custom label
+- **Mini profile per guy** so you never mix them up: what he studies / works, where you met, age, little details ("DJs on weekends"). Sisi fills it in automatically from what you tell her (`remember` per guy) and you can edit it
 - Each guy gets a **vibe score** on the 💍 husband material ↔ walking red flag 🚩 meter, computed
   from his analysed messages (share of red vs green flags, weighted by severity: intimidation and
   controlling count more than breadcrumbing)
