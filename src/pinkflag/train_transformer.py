@@ -59,15 +59,43 @@ def make_loader(df, tokenizer, max_length, batch_size, shuffle):
 
 
 @torch.no_grad()
-def predict(model, loader, device) -> np.ndarray:
+def predict(model, loader, device, loss_fn=None):
+    """Predicted label ids; with loss_fn, also the average loss (used for validation loss)."""
     model.eval()
-    preds = []
+    preds, total, n = [], 0.0, 0
     for batch in loader:
+        labels = batch["labels"].to(device)
         batch = {k: v.to(device) for k, v in batch.items() if k != "labels"}
         with torch.autocast(device_type=device.type, enabled=device.type == "cuda"):
             logits = model(**batch).logits
+        if loss_fn is not None:
+            total += loss_fn(logits.float(), labels).item() * len(labels)
+            n += len(labels)
         preds.append(logits.argmax(-1).cpu().numpy())
-    return np.concatenate(preds)
+    preds = np.concatenate(preds)
+    return (preds, total / max(n, 1)) if loss_fn is not None else preds
+
+
+def plot_history(history: list[dict], path: Path) -> None:
+    """Train vs validation loss + validation macro-F1 per epoch."""
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except ImportError:
+        print("  (matplotlib not installed: skipping the loss chart)")
+        return
+    ep = [h["epoch"] for h in history]
+    fig, (a, b) = plt.subplots(1, 2, figsize=(10, 4))
+    a.plot(ep, [h["train_loss"] for h in history], "o-", color="#8E3B5E", label="train loss")
+    a.plot(ep, [h["val_loss"] for h in history], "o-", color="#E88FAB", label="validation loss")
+    a.set_xlabel("epoch"); a.set_title("Loss (lower = better)"); a.legend()
+    b.plot(ep, [h["type_macro_f1"] for h in history], "o-", color="#3E8E6E")
+    b.set_xlabel("epoch"); b.set_title("Validation macro-F1 (higher = better)")
+    fig.tight_layout()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(path, dpi=120)
+    print(f"📈 loss curves -> {path}")
 
 
 def score(y_true: pd.Series, y_pred: np.ndarray) -> dict:
@@ -137,14 +165,21 @@ def main(argv=None) -> None:
             scaler.update()
             scheduler.step()
             running += loss.item()
+            if step % 10 == 0 or step == len(train_dl):
+                print(f"\r  epoch {epoch}  step {step}/{len(train_dl)}  loss {running / step:.3f}",
+                      end="", flush=True)
 
-        val_pred = np.array(LABEL_LIST)[predict(model, val_dl, device)]
-        val_score = score(val.label, val_pred)
-        history.append({"epoch": epoch, "train_loss": running / len(train_dl), **{
+        val_ids, val_loss = predict(model, val_dl, device, loss_fn)
+        val_score = score(val.label, np.array(LABEL_LIST)[val_ids])
+        train_loss = running / len(train_dl)
+        history.append({"epoch": epoch, "train_loss": train_loss, "val_loss": val_loss, **{
             k: val_score[k] for k in ("type_accuracy", "type_macro_f1", "red_flag_accuracy")}})
-        print(f"  epoch {epoch}  loss {running / len(train_dl):.3f}  "
+        # train loss falling while val loss rises = overfitting (memorizing, not learning)
+        gap = "⚠️ overfitting?" if len(history) > 1 and val_loss > history[-2]["val_loss"] \
+            and train_loss < history[-2]["train_loss"] else ""
+        print(f"\r  epoch {epoch}  train loss {train_loss:.3f}  val loss {val_loss:.3f}  "
               f"val acc {val_score['type_accuracy']:.0%}  macro-F1 {val_score['type_macro_f1']:.2f}"
-              f"  ({time.time() - start:.0f}s)")
+              f"  ({time.time() - start:.0f}s) {gap}")
 
         if val_score["type_macro_f1"] > best_f1:
             best_f1, bad_epochs = val_score["type_macro_f1"], 0
@@ -155,6 +190,8 @@ def main(argv=None) -> None:
             if bad_epochs >= t["early_stopping_patience"]:
                 print("  ⏹️  early stopping: validation stopped improving")
                 break
+
+    plot_history(history, Path(cfg["output"]["report_path"]).with_suffix(".png"))
 
     # reload the best epoch and evaluate once on the test set
     model = AutoModelForSequenceClassification.from_pretrained(out_dir).to(device)
