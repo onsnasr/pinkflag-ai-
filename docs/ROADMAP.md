@@ -44,8 +44,8 @@ Each version has one clear goal and one thing you learn from building it.
   controlling count more than breadcrumbing)
 - **Comparison view:** cards side by side + a flag profile chart per guy ("Amine: mostly
   controlling · Youssef: mostly breadcrumbing")
-- **🎲 Roll the dice:** a playful animation that "rolls" through the guys she's currently talking
-  to and lands on the best one. Not random: it lands on the highest vibe score, then Sisi explains why
+- **🎡 Spin the wheel:** a prize-wheel with one slice per guy she's currently talking
+  to; it lands on the best one. Not random: it lands on the highest vibe score, then Sisi explains why
   ("he's never once made you feel crazy 💚")
 - Sisi gets a `compare_guys` tool: "who's better for me, Amine or Youssef?" → answers from the data
 - Tone rule: scores describe **the messages she shared**, never the whole person; no insulting labels
