@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PinkFlag · Sisi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --plum: #5A2340;
+    --rose: #8E3B5E;
+    --pink: #F4B6C8;
+    --pink-strong: #E88FAB;
+    --blush: #FFF5F8;
+    --her: #FBEFF3;
+    --card: #FFFFFF;
+    --border: #F2D9E2;
+    --text: #2B1A22;
+    --muted: #7A5A68;
+    --red: #D7263D;
+    --red-bg: #FDECEE;
+    --green: #3E8E6E;
+    --green-bg: #EAF6F0;
+    --serif: "Fraunces", Georgia, serif;
+    --sans: "Inter", "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--blush); color: var(--text); font-family: var(--sans); }
+
+  .app { height: 100vh; display: grid; grid-template-rows: auto 1fr; }
+
+  /* top bar */
+  .top { display: flex; align-items: center; gap: 14px; padding: 12px 24px; background: var(--card); border-bottom: 1px solid var(--border); }
+  .brand { font-family: var(--serif); font-size: 22px; color: var(--plum); font-weight: 600; }
+  .brand span { font-size: 18px; }
+  .case { margin-left: 24px; display: flex; gap: 8px; }
+  .case button { border: 1px solid var(--border); background: var(--blush); color: var(--plum); border-radius: 999px; padding: 7px 14px; font: 500 14px var(--sans); cursor: pointer; }
+  .case button.on { background: var(--plum); color: #fff; border-color: var(--plum); }
+  .top .spacer { flex: 1; }
+  .top .new { border: 0; background: var(--pink); color: var(--plum); border-radius: 10px; padding: 9px 16px; font: 600 14px var(--sans); cursor: pointer; }
+  .receipts-toggle { display: none; }
+
+  /* split */
+  .split { display: grid; grid-template-columns: 1fr 380px; min-height: 0; }
+
+  /* chat */
+  .chat { display: grid; grid-template-rows: auto 1fr auto; min-height: 0; }
+  .who { display: flex; align-items: center; gap: 14px; padding: 18px 28px; border-bottom: 1px solid var(--border); background: linear-gradient(180deg, #fff, var(--blush)); }
+  .who .avatar { width: 56px; height: 56px; }
+  .who h1 { font-family: var(--serif); font-size: 24px; margin: 0; font-weight: 600; }
+  .who p { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #3BB273; margin-right: 6px; }
+
+  .thread { overflow-y: auto; padding: 26px 28px; display: flex; flex-direction: column; gap: 14px; }
+  .day { align-self: center; color: var(--muted); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+  .row { display: flex; gap: 10px; align-items: flex-end; max-width: 78%; }
+  .row.me { align-self: flex-end; flex-direction: row-reverse; }
+  .row .avatar { width: 34px; height: 34px; flex: none; }
+  .bubble { padding: 12px 16px; border-radius: 20px; font-size: 15.5px; line-height: 1.5; }
+  .row.sisi .bubble { background: var(--her); border-bottom-left-radius: 6px; }
+  .row.me .bubble { background: var(--rose); color: #fff; border-bottom-right-radius: 6px; }
+  .shot { width: 210px; border-radius: 14px; overflow: hidden; border: 3px solid var(--rose); background: #fff; }
+  .shot .fake { padding: 12px; display: grid; gap: 6px; font-size: 11px; }
+  .shot .fake div { padding: 6px 9px; border-radius: 10px; background: #EEE; max-width: 85%; }
+  .shot .fake div.r { justify-self: end; background: #CDE3FF; }
+  .shot small { display: block; background: var(--rose); color: #fff; padding: 6px 10px; font-size: 12px; }
+
+  /* receipts inside Sisi's reply */
+  .flags { display: grid; gap: 8px; margin: 10px 0 4px; }
+  .flag { background: #fff; border: 1px solid var(--border); border-left: 4px solid var(--red); border-radius: 10px; padding: 8px 12px; font-size: 14px; }
+  .flag b { color: var(--red); font-size: 12px; letter-spacing: .04em; display: block; margin-bottom: 2px; }
+  .flag.good { border-left-color: var(--green); }
+  .flag.good b { color: var(--green); }
+
+  .typing { display: inline-flex; gap: 4px; padding: 14px 16px; }
+  .typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--rose); opacity: .4; animation: blink 1.2s infinite; }
+  .typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 50% { opacity: 1; transform: translateY(-2px); } }
+
+  /* composer */
+  .composer { padding: 14px 28px 20px; border-top: 1px solid var(--border); background: var(--card); }
+  .chips { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .chips button { border: 1px solid var(--border); background: var(--blush); color: var(--plum); border-radius: 999px; padding: 7px 13px; font: 500 13px var(--sans); cursor: pointer; }
+  .box { display: flex; gap: 10px; align-items: center; background: var(--blush); border: 1px solid var(--border); border-radius: 16px; padding: 8px 8px 8px 14px; }
+  .box input { flex: 1; border: 0; background: transparent; font: 15px var(--sans); outline: none; color: var(--text); }
+  .icon { border: 0; background: transparent; font-size: 20px; cursor: pointer; }
+  .send { border: 0; background: var(--rose); color: #fff; border-radius: 12px; width: 44px; height: 44px; font-size: 18px; cursor: pointer; }
+
+  /* receipts panel */
+  .panel { border-left: 1px solid var(--border); background: var(--card); overflow-y: auto; padding: 24px; }
+  .panel h2 { font-family: var(--serif); font-weight: 400; font-size: 26px; margin: 0 0 4px; }
+  .panel .sub { color: var(--muted); font-size: 14px; margin: 0 0 22px; }
+  .meter { margin-bottom: 26px; }
+  .meter .labels { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .bar { height: 12px; border-radius: 999px; background: linear-gradient(90deg, var(--green), #F2C14E, var(--red)); position: relative; }
+  .bar .pin { position: absolute; top: -6px; left: 78%; width: 24px; height: 24px; border-radius: 50%; background: #fff; border: 4px solid var(--plum); transform: translateX(-50%); }
+  .meter .result { margin-top: 12px; font-weight: 600; color: var(--red); }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 26px; }
+  .stat { background: var(--blush); border-radius: 12px; padding: 12px; text-align: center; }
+  .stat .n { font-family: var(--serif); font-size: 28px; }
+  .stat .l { font-size: 12px; color: var(--muted); }
+  .panel h3 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  .timeline { list-style: none; margin: 0 0 26px; padding: 0; display: grid; gap: 10px; }
+  .timeline li { display: grid; grid-template-columns: 54px 1fr; gap: 10px; font-size: 14px; }
+  .timeline time { color: var(--muted); font-size: 12px; padding-top: 2px; }
+  .chip { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 3px 9px; background: var(--red-bg); color: var(--red); margin-top: 4px; }
+  .chip.good { background: var(--green-bg); color: var(--green); }
+  .notes { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .notes li { background: var(--blush); border-radius: 10px; padding: 9px 12px; font-size: 14px; }
+
+  /* phone */
+  @media (max-width: 900px) {
+    .split { grid-template-columns: 1fr; }
+    .panel { display: none; position: fixed; inset: 60px 0 0 0; z-index: 5; }
+    .panel.open { display: block; }
+    .case { display: none; }
+    .receipts-toggle { display: inline-block; border: 1px solid var(--border); background: var(--blush); color: var(--plum); border-radius: 10px; padding: 8px 12px; font: 600 14px var(--sans); }
+    .top { padding: 10px 16px; }
+    .who, .thread, .composer { padding-left: 16px; padding-right: 16px; }
+    .row { max-width: 92%; }
+    .top .new { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Sisi's avatar: brown hair, glasses, warm smile (placeholder until the real drawing) -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="sisi" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="50" fill="#F9D3DF"/>
+      <path d="M18 62 C14 30 30 14 50 14 C72 14 87 30 82 64 C80 80 74 92 70 98 L30 98 C24 90 19 78 18 62Z" fill="#5B3A29"/>
+      <rect x="40" y="70" width="20" height="16" rx="6" fill="#B9825F"/>
+      <path d="M20 100 C22 86 34 80 50 80 C66 80 78 86 80 100Z" fill="#8E3B5E"/>
+      <ellipse cx="50" cy="52" rx="23" ry="26" fill="#C68E68"/>
+      <path d="M26 48 C28 28 44 22 56 24 C66 26 74 34 75 46 C66 40 56 34 46 30 C42 38 34 44 26 48Z" fill="#5B3A29"/>
+      <circle cx="40" cy="54" r="8" fill="none" stroke="#2B1A22" stroke-width="2.6"/>
+      <circle cx="61" cy="54" r="8" fill="none" stroke="#2B1A22" stroke-width="2.6"/>
+      <path d="M48 54 L53 54" stroke="#2B1A22" stroke-width="2.6"/>
+      <circle cx="40" cy="55" r="2.4" fill="#2B1A22"/>
+      <circle cx="61" cy="55" r="2.4" fill="#2B1A22"/>
+      <circle cx="33" cy="64" r="4" fill="#E88FAB" opacity=".55"/>
+      <circle cx="68" cy="64" r="4" fill="#E88FAB" opacity=".55"/>
+      <path d="M43 66 C47 71 54 71 58 66" fill="none" stroke="#7A3B2E" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M66 18 l6 -6 l2 8 l8 -1 l-6 6" fill="#E88FAB"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <header class="top">
+    <div class="brand"><span>🎀</span> PinkFlag</div>
+    <nav class="case">
+      <button class="on">Amine · 2 months</button>
+      <button>Youssef · talking stage</button>
+      <button>+ new guy</button>
+    </nav>
+    <div class="spacer"></div>
+    <button class="receipts-toggle" id="toggle">🧾 Receipts</button>
+    <button class="new">+ New chat</button>
+  </header>
+
+  <div class="split">
+    <!-- CHAT: the main thing -->
+    <section class="chat">
+      <div class="who">
+        <svg class="avatar"><use href="#sisi"/></svg>
+        <div>
+          <h1>Sisi</h1>
+          <p><span class="dot"></span>your big sister · remembers everything you tell her</p>
+        </div>
+      </div>
+
+      <div class="thread" id="thread">
+        <div class="day">Today</div>
+
+        <div class="row sisi"><svg class="avatar"><use href="#sisi"/></svg>
+          <div class="bubble">heyy bestie 💕 what's going on? spill. you can paste his texts or drop a screenshot</div></div>
+
+        <div class="row me"><div class="bubble">sisi help 😭 so amine, we've been talking for like 2 months. look what he sent last night</div></div>
+
+        <div class="row me"><div class="shot">
+          <div class="fake">
+            <div>where are you rn? send me your location</div>
+            <div class="r">at sarra's, told you this morning 😅</div>
+            <div>you never told me that, you're making things up again</div>
+            <div>fine have fun, i'll just sit here alone like always</div>
+          </div>
+          <small>📸 screenshot · 4 messages</small>
+        </div></div>
+
+        <div class="row sisi"><svg class="avatar"><use href="#sisi"/></svg>
+          <div class="bubble">
+            oh babe, no 😮‍💨 I read every message. here are the receipts:
+            <div class="flags">
+              <div class="flag"><b>⛓️ CONTROLLING · 91%</b>"where are you rn? send me your location"</div>
+              <div class="flag"><b>🔥 GASLIGHTING · 84%</b>"you never told me that, you're making things up again"</div>
+              <div class="flag"><b>😢 GUILT TRIPPING · 88%</b>"fine have fun, i'll just sit here alone like always"</div>
+            </div>
+            you literally told him that morning. you're not crazy, and you're allowed to have a night out 💗<br>
+            has he done the "you're making things up" thing before?
+          </div></div>
+
+        <div class="row me"><div class="bubble">yeah… like last week too 🥲</div></div>
+
+        <div class="row sisi"><svg class="avatar"><use href="#sisi"/></svg>
+          <div class="bubble">okay, that's twice in a week. I'm writing that down 📝 that's not a bad day, that's a pattern.<br>
+            want me to help you write a calm reply, or talk about what <i>you</i> want here?</div></div>
+      </div>
+
+      <div class="composer">
+        <div class="chips">
+          <button>✍️ help me reply</button>
+          <button>🤔 am I overreacting?</button>
+          <button>💍 husband material or nah?</button>
+        </div>
+        <div class="box">
+          <button class="icon" title="Add a screenshot">📎</button>
+          <input id="msg" placeholder="Tell Sisi what he said...">
+          <button class="send" id="send">➤</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RECEIPTS: the case file, updated as you talk -->
+    <aside class="panel" id="panel">
+      <h2>The receipts</h2>
+      <p class="sub">Amine · talking for 2 months · 1 screenshot</p>
+
+      <div class="meter">
+        <div class="labels"><span>💍 husband material</span><span>walking red flag 🚩</span></div>
+        <div class="bar"><div class="pin"></div></div>
+        <div class="result">Leaning red flag: 3 flags in 4 messages</div>
+      </div>
+
+      <div class="grid">
+        <div class="stat"><div class="n">4</div><div class="l">his messages</div></div>
+        <div class="stat"><div class="n">3</div><div class="l">red flags</div></div>
+        <div class="stat"><div class="n">2×</div><div class="l">gaslighting this week</div></div>
+      </div>
+
+      <h3>Timeline</h3>
+      <ul class="timeline">
+        <li><time>last wk</time><div>"you're making things up"<br><span class="chip">🔥 gaslighting</span></div></li>
+        <li><time>23:41</time><div>"send me your location"<br><span class="chip">⛓️ controlling</span></div></li>
+        <li><time>23:44</time><div>"you never told me that"<br><span class="chip">🔥 gaslighting</span></div></li>
+        <li><time>23:45</time><div>"i'll just sit here alone"<br><span class="chip">😢 guilt tripping</span></div></li>
+        <li><time>00:10</time><div>"text me when you're home safe"<br><span class="chip good">💚 green flag</span></div></li>
+      </ul>
+
+      <h3>What Sisi remembers</h3>
+      <ul class="notes">
+        <li>📝 His name is Amine, talking for 2 months</li>
+        <li>📝 Asks for her location when she's out</li>
+        <li>📝 Said "you're making things up" twice in a week</li>
+        <li>📝 She feels anxious after their arguments</li>
+      </ul>
+    </aside>
+  </div>
+</div>
+
+<script>
+  // tiny demo: sending shows your bubble, Sisi "typing", then a canned reply
+  const thread = document.getElementById("thread");
+  const input = document.getElementById("msg");
+  const avatar = '<svg class="avatar"><use href="#sisi"/></svg>';
+  function add(html, who) {
+    const row = document.createElement("div");
+    row.className = "row " + who;
+    row.innerHTML = (who === "sisi" ? avatar : "") + html;
+    thread.appendChild(row);
+    thread.scrollTop = thread.scrollHeight;
+    return row;
+  }
+  function send(text) {
+    if (!text.trim()) return;
+    add('<div class="bubble"></div>', "me").querySelector(".bubble").textContent = text;
+    input.value = "";
+    const typing = add('<div class="bubble typing"><i></i><i></i><i></i></div>', "sisi");
+    setTimeout(() => {
+      typing.remove();
+      add('<div class="bubble">this is just the design preview 🎀 in the real app, I\'ll actually read that and answer you!</div>', "sisi");
+    }, 1400);
+  }
+  document.getElementById("send").onclick = () => send(input.value);
+  input.addEventListener("keydown", e => { if (e.key === "Enter") send(input.value); });
+  document.querySelectorAll(".chips button").forEach(b => b.onclick = () => send(b.textContent));
+  document.getElementById("toggle").onclick = () => document.getElementById("panel").classList.toggle("open");
+  thread.scrollTop = thread.scrollHeight;
+</script>
+</body>
+</html>
