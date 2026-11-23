@@ -314,12 +314,57 @@ $("toggleReceipts").onclick = () => $("panel").classList.toggle("open");
 let recorder = null, chunks = [], micStream = null;
 const callState = (t) => ($("callState").textContent = t);
 
-$("callBtn").onclick = () => {
+// 📳 ringtone made with the Web Audio API (two mixed tones, like a real phone): no sound file needed
+let ringCtx = null, ringTimer = null;
+function startRinging() {
+  ringCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const ring = () => {
+    const t = ringCtx.currentTime, gain = ringCtx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.15, t + 0.05);
+    gain.gain.setValueAtTime(0.15, t + 0.9);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.0);
+    gain.connect(ringCtx.destination);
+    for (const f of [440, 480]) {
+      const osc = ringCtx.createOscillator();
+      osc.frequency.value = f; osc.connect(gain);
+      osc.start(t); osc.stop(t + 1.0);
+    }
+  };
+  ring();
+  ringTimer = setInterval(ring, 2000);
+}
+function stopRinging() {
+  clearInterval(ringTimer); ringTimer = null;
+  ringCtx?.close(); ringCtx = null;
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+$("callBtn").onclick = async () => {
   $("call").classList.add("open");
-  callState("tap the mic and talk to me 💕");
-  $("caption").textContent = "I'm all ears, bestie.";
+  $("talk").disabled = true;
+  callState("calling Sisi… 📳");
+  $("caption").textContent = "ringing…";
+  startRinging();
+  try {
+    // ring at least ~2 times, and until her greeting is ready (the first one loads her voice model)
+    const [greet] = await Promise.all([api("/api/voice/greeting"), sleep(3800)]);
+    if (!$("call").classList.contains("open")) return;   // hung up while ringing
+    stopRinging();
+    callState("Sisi picked up 💕");
+    $("caption").textContent = greet.text;
+    $("sisiVoice").src = "data:audio/wav;base64," + greet.audio;
+    $("sisiVoice").onended = () => callState("your turn, tap the mic 🎙️");
+    await $("sisiVoice").play();
+  } catch {
+    stopRinging();
+    callState("she couldn't pick up 😵 tap the mic to try anyway");
+  } finally {
+    $("talk").disabled = false;
+  }
 };
 $("hang").onclick = () => {
+  stopRinging();
   if (recorder && recorder.state === "recording") recorder.stop();
   micStream?.getTracks().forEach((t) => t.stop()); micStream = null;
   $("sisiVoice").pause();

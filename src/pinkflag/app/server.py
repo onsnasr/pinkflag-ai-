@@ -127,6 +127,16 @@ def create_app(memory: Memory, transport_factory: Callable[[], Transport],
         return {"reply": reply, "receipts": [_receipt(r) for r in tools.analysed],
                 "guy": with_summary(get_guy(guy_id))}
 
+    greeting_cache: dict[str, str] = {}
+
+    @app.get("/api/voice/greeting")
+    def greeting():
+        """What Sisi says when she picks up (synthesized once, then cached)."""
+        text = "Hello bestie! I'm here, talk to me. What did he do?"
+        if text not in greeting_cache:
+            greeting_cache[text] = base64.b64encode(_tts(text)).decode()
+        return {"text": text, "audio": greeting_cache[text]}
+
     @app.post("/api/guys/{guy_id}/voice")
     async def voice(guy_id: int, audio: UploadFile):
         """📞 Call Sisi: your voice in -> Whisper -> Sisi -> Piper -> her voice out."""

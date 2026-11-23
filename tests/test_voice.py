@@ -39,5 +39,15 @@ def test_silence_gets_a_gentle_retry():
     assert "didn't catch" in body["reply"]
 
 
+def test_greeting_is_synthesized_once():
+    calls = []
+    app = create_app(Memory(":memory:"), gemini("x"), detector=(None, None),
+                     stt=lambda a: {"text": ""}, tts=lambda t: calls.append(t) or b"wav")
+    client = TestClient(app)
+    first, second = client.get("/api/voice/greeting").json(), client.get("/api/voice/greeting").json()
+    assert first["text"].startswith("Hello bestie") and first == second
+    assert len(calls) == 1
+
+
 def test_speakable_strips_emojis_and_markdown():
     assert speakable("heyy **bestie** 💕 that's 🚩") == "heyy bestie that's"
