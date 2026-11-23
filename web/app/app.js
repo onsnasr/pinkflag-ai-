@@ -280,26 +280,79 @@ $("spin").onclick = async function () {
   }, { once: true });
 };
 
-// ---------- dictation (browser speech recognition) ----------
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let rec = null;
-$("mic").onclick = () => {
-  if (!SR) return toast("voice typing needs Chrome or Edge 🙏");
-  if (rec) { rec.stop(); return; }
-  rec = new SR();
-  rec.lang = navigator.language || "en-US";
-  rec.interimResults = true; rec.continuous = true;
-  const before = $("msg").value ? $("msg").value + " " : "";
-  rec.onresult = (e) => {
-    let text = "";
-    for (const r of e.results) text += r[0].transcript;
-    $("msg").value = before + text; autosize();
+// ---------- shared mic recorder (used by dictation and calls) ----------
+// Records with MediaRecorder and measures the loudness live, so you can SEE the mic hears you.
+const mic = { stream: null, recorder: null, chunks: [], started: 0, peak: 0, raf: null };
+
+async function startRecording(onLevel) {
+  mic.stream = mic.stream || await navigator.mediaDevices.getUserMedia({
+    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+  const ctx = new AudioContext();
+  const analyser = ctx.createAnalyser();
+  ctx.createMediaStreamSource(mic.stream).connect(analyser);
+  const data = new Uint8Array(analyser.fftSize);
+  mic.peak = 0;
+  const tick = () => {
+    analyser.getByteTimeDomainData(data);
+    let max = 0;
+    for (const v of data) max = Math.max(max, Math.abs(v - 128));
+    const level = Math.min(1, max / 64);
+    mic.peak = Math.max(mic.peak, level);
+    onLevel?.(level);
+    mic.raf = requestAnimationFrame(tick);
   };
-  rec.onend = () => { rec = null; $("mic").classList.remove("on"); $("msg").placeholder = "Tell Sisi what he said..."; };
-  rec.onerror = () => toast("couldn't hear you, check the mic permission 🎙️");
-  rec.start();
+  tick();
+  mic.chunks = [];
+  mic.recorder = new MediaRecorder(mic.stream);
+  mic.recorder.ondataavailable = (e) => mic.chunks.push(e.data);
+  mic.recorder.start();
+  mic.started = performance.now();
+  mic.ctx = ctx;
+}
+
+function stopRecording() {
+  return new Promise((resolve) => {
+    mic.recorder.onstop = () => {
+      cancelAnimationFrame(mic.raf);
+      mic.ctx?.close();
+      const ms = performance.now() - mic.started;
+      resolve({ blob: new Blob(mic.chunks, { type: mic.recorder.mimeType }), ms, peak: mic.peak });
+    };
+    mic.recorder.stop();
+  });
+}
+const isRecording = () => mic.recorder && mic.recorder.state === "recording";
+
+// a recording is useless if it's too short or the mic heard (almost) nothing
+function checkRecording(rec) {
+  if (rec.ms < 700) return "that was super short 😅 tap, talk, then tap again";
+  if (rec.peak < 0.04) return "I can't hear anything 🙉 check your mic (or Windows sound settings)";
+  return null;
+}
+
+// ---------- 🎙️ dictation in the chat box: Whisper (local) writes what you say ----------
+$("mic").onclick = async () => {
+  if (isRecording()) {
+    $("mic").classList.remove("on");
+    $("msg").placeholder = "Sisi is writing down what you said… ✍️";
+    const rec = await stopRecording();
+    const problem = checkRecording(rec);
+    if (problem) { $("msg").placeholder = "Tell Sisi what he said..."; return toast(problem); }
+    const form = new FormData();
+    form.append("audio", rec.blob, "voice.webm");
+    try {
+      const res = await (await fetch("/api/transcribe", { method: "POST", body: form })).json();
+      if (!res.text) toast("didn't catch that, try again? 🎙️");
+      $("msg").value = ($("msg").value ? $("msg").value + " " : "") + (res.text || "");
+      autosize(); $("msg").focus();
+    } catch { toast("transcription failed 😵"); }
+    $("msg").placeholder = "Tell Sisi what he said...";
+    return;
+  }
+  try { await startRecording((lvl) => ($("mic").style.boxShadow = `0 0 0 ${2 + lvl * 10}px rgba(215,38,61,.25)`)); }
+  catch { return toast("I need mic permission to hear you 🎙️"); }
   $("mic").classList.add("on");
-  $("msg").placeholder = "listening… tap 🎙️ again to stop";
+  $("msg").placeholder = "listening… tap 🎙️ again when you're done";
 };
 
 // ---------- wiring ----------
@@ -311,7 +364,6 @@ $("msg").addEventListener("input", autosize);
 document.querySelectorAll("#chips button").forEach((b) => (b.onclick = () => send(b.textContent)));
 $("toggleReceipts").onclick = () => $("panel").classList.toggle("open");
 // ---------- 📞 call Sisi: record -> /voice (Whisper -> Sisi -> Piper) -> play her answer ----------
-let recorder = null, chunks = [], micStream = null;
 const callState = (t) => ($("callState").textContent = t);
 
 // 📳 ringtone made with the Web Audio API (two mixed tones, like a real phone): no sound file needed
@@ -363,34 +415,33 @@ $("callBtn").onclick = async () => {
     $("talk").disabled = false;
   }
 };
-$("hang").onclick = () => {
+$("hang").onclick = async () => {
   stopRinging();
-  if (recorder && recorder.state === "recording") recorder.stop();
-  micStream?.getTracks().forEach((t) => t.stop()); micStream = null;
+  if (isRecording()) await stopRecording();
+  mic.stream?.getTracks().forEach((t) => t.stop()); mic.stream = null;
   $("sisiVoice").pause();
+  $("talk").classList.remove("on");
   $("call").classList.remove("open");
 };
 $("talk").onclick = async () => {
-  if (recorder && recorder.state === "recording") { recorder.stop(); return; }
-  try {
-    micStream = micStream || await navigator.mediaDevices.getUserMedia({ audio: true });
-  } catch { return toast("I need your mic permission to hear you 🎙️"); }
+  if (isRecording()) { await sendVoice(await stopRecording()); return; }
   $("sisiVoice").pause();
-  chunks = [];
-  recorder = new MediaRecorder(micStream);
-  recorder.ondataavailable = (e) => chunks.push(e.data);
-  recorder.onstop = sendVoice;
-  recorder.start();
+  try {
+    await startRecording((lvl) => ($("talk").style.boxShadow = `0 0 0 ${4 + lvl * 22}px rgba(244,182,200,.45)`));
+  } catch { return toast("I need your mic permission to hear you 🎙️"); }
   $("talk").classList.add("on");
   callState("listening… tap again when you're done");
 };
 
-async function sendVoice() {
+async function sendVoice(rec) {
   $("talk").classList.remove("on");
+  $("talk").style.boxShadow = "";
+  const problem = checkRecording(rec);
+  if (problem) { callState(problem); return; }
   $("talk").disabled = true;
   callState("Sisi is thinking… 💭");
   const form = new FormData();
-  form.append("audio", new Blob(chunks, { type: recorder.mimeType }), "voice.webm");
+  form.append("audio", rec.blob, "voice.webm");
   try {
     const res = await fetch(`/api/guys/${state.current.id}/voice`, { method: "POST", body: form });
     if (!res.ok) throw new Error(res.statusText);

@@ -127,6 +127,11 @@ def create_app(memory: Memory, transport_factory: Callable[[], Transport],
         return {"reply": reply, "receipts": [_receipt(r) for r in tools.analysed],
                 "guy": with_summary(get_guy(guy_id))}
 
+    @app.post("/api/transcribe")
+    async def transcribe(audio: UploadFile):
+        """🎙️ Dictation in the chat box: your voice -> text (Whisper, local)."""
+        return _stt(await audio.read())
+
     greeting_cache: dict[str, str] = {}
 
     @app.get("/api/voice/greeting")

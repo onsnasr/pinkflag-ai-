@@ -53,8 +53,13 @@ def piper_voice():
 def transcribe(audio: bytes) -> dict:
     """Any audio the browser records (webm/ogg/wav) -> {"text", "language"}."""
     model, _ = whisper_model()
-    segments, info = model.transcribe(io.BytesIO(audio), vad_filter=True, beam_size=5)
-    text = " ".join(s.text.strip() for s in segments).strip()
+    # the voice-activity filter skips silence, but can also drop quiet voices: if it
+    # throws everything away, listen again without it
+    for vad in (True, False):
+        segments, info = model.transcribe(io.BytesIO(audio), vad_filter=vad, beam_size=5)
+        text = " ".join(s.text.strip() for s in segments).strip()
+        if text:
+            break
     return {"text": text, "language": info.language}
 
 
