@@ -280,26 +280,79 @@ $("spin").onclick = async function () {
   }, { once: true });
 };
 
-// ---------- dictation (browser speech recognition) ----------
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let rec = null;
-$("mic").onclick = () => {
-  if (!SR) return toast("voice typing needs Chrome or Edge 🙏");
-  if (rec) { rec.stop(); return; }
-  rec = new SR();
-  rec.lang = navigator.language || "en-US";
-  rec.interimResults = true; rec.continuous = true;
-  const before = $("msg").value ? $("msg").value + " " : "";
-  rec.onresult = (e) => {
-    let text = "";
-    for (const r of e.results) text += r[0].transcript;
-    $("msg").value = before + text; autosize();
+// ---------- shared mic recorder (used by dictation and calls) ----------
+// Records with MediaRecorder and measures the loudness live, so you can SEE the mic hears you.
+const mic = { stream: null, recorder: null, chunks: [], started: 0, peak: 0, raf: null };
+
+async function startRecording(onLevel) {
+  mic.stream = mic.stream || await navigator.mediaDevices.getUserMedia({
+    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+  const ctx = new AudioContext();
+  const analyser = ctx.createAnalyser();
+  ctx.createMediaStreamSource(mic.stream).connect(analyser);
+  const data = new Uint8Array(analyser.fftSize);
+  mic.peak = 0;
+  const tick = () => {
+    analyser.getByteTimeDomainData(data);
+    let max = 0;
+    for (const v of data) max = Math.max(max, Math.abs(v - 128));
+    const level = Math.min(1, max / 64);
+    mic.peak = Math.max(mic.peak, level);
+    onLevel?.(level);
+    mic.raf = requestAnimationFrame(tick);
   };
-  rec.onend = () => { rec = null; $("mic").classList.remove("on"); $("msg").placeholder = "Tell Sisi what he said..."; };
-  rec.onerror = () => toast("couldn't hear you, check the mic permission 🎙️");
-  rec.start();
+  tick();
+  mic.chunks = [];
+  mic.recorder = new MediaRecorder(mic.stream);
+  mic.recorder.ondataavailable = (e) => mic.chunks.push(e.data);
+  mic.recorder.start();
+  mic.started = performance.now();
+  mic.ctx = ctx;
+}
+
+function stopRecording() {
+  return new Promise((resolve) => {
+    mic.recorder.onstop = () => {
+      cancelAnimationFrame(mic.raf);
+      mic.ctx?.close();
+      const ms = performance.now() - mic.started;
+      resolve({ blob: new Blob(mic.chunks, { type: mic.recorder.mimeType }), ms, peak: mic.peak });
+    };
+    mic.recorder.stop();
+  });
+}
+const isRecording = () => mic.recorder && mic.recorder.state === "recording";
+
+// a recording is useless if it's too short or the mic heard (almost) nothing
+function checkRecording(rec) {
+  if (rec.ms < 700) return "that was super short 😅 tap, talk, then tap again";
+  if (rec.peak < 0.04) return "I can't hear anything 🙉 check your mic (or Windows sound settings)";
+  return null;
+}
+
+// ---------- 🎙️ dictation in the chat box: Whisper (local) writes what you say ----------
+$("mic").onclick = async () => {
+  if (isRecording()) {
+    $("mic").classList.remove("on");
+    $("msg").placeholder = "Sisi is writing down what you said… ✍️";
+    const rec = await stopRecording();
+    const problem = checkRecording(rec);
+    if (problem) { $("msg").placeholder = "Tell Sisi what he said..."; return toast(problem); }
+    const form = new FormData();
+    form.append("audio", rec.blob, "voice.webm");
+    try {
+      const res = await (await fetch("/api/transcribe", { method: "POST", body: form })).json();
+      if (!res.text) toast("didn't catch that, try again? 🎙️");
+      $("msg").value = ($("msg").value ? $("msg").value + " " : "") + (res.text || "");
+      autosize(); $("msg").focus();
+    } catch { toast("transcription failed 😵"); }
+    $("msg").placeholder = "Tell Sisi what he said...";
+    return;
+  }
+  try { await startRecording((lvl) => ($("mic").style.boxShadow = `0 0 0 ${2 + lvl * 10}px rgba(215,38,61,.25)`)); }
+  catch { return toast("I need mic permission to hear you 🎙️"); }
   $("mic").classList.add("on");
-  $("msg").placeholder = "listening… tap 🎙️ again to stop";
+  $("msg").placeholder = "listening… tap 🎙️ again when you're done";
 };
 
 // ---------- wiring ----------
@@ -310,8 +363,103 @@ $("msg").addEventListener("keydown", (e) => {
 $("msg").addEventListener("input", autosize);
 document.querySelectorAll("#chips button").forEach((b) => (b.onclick = () => send(b.textContent)));
 $("toggleReceipts").onclick = () => $("panel").classList.toggle("open");
-$("callBtn").onclick = () => $("call").classList.add("open");
-$("hang").onclick = () => $("call").classList.remove("open");
+// ---------- 📞 call Sisi: record -> /voice (Whisper -> Sisi -> Piper) -> play her answer ----------
+const callState = (t) => ($("callState").textContent = t);
+
+// 📳 ringtone made with the Web Audio API (two mixed tones, like a real phone): no sound file needed
+let ringCtx = null, ringTimer = null;
+function startRinging() {
+  ringCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const ring = () => {
+    const t = ringCtx.currentTime, gain = ringCtx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.15, t + 0.05);
+    gain.gain.setValueAtTime(0.15, t + 0.9);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.0);
+    gain.connect(ringCtx.destination);
+    for (const f of [440, 480]) {
+      const osc = ringCtx.createOscillator();
+      osc.frequency.value = f; osc.connect(gain);
+      osc.start(t); osc.stop(t + 1.0);
+    }
+  };
+  ring();
+  ringTimer = setInterval(ring, 2000);
+}
+function stopRinging() {
+  clearInterval(ringTimer); ringTimer = null;
+  ringCtx?.close(); ringCtx = null;
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+$("callBtn").onclick = async () => {
+  $("call").classList.add("open");
+  $("talk").disabled = true;
+  callState("calling Sisi… 📳");
+  $("caption").textContent = "ringing…";
+  startRinging();
+  try {
+    // ring at least ~2 times, and until her greeting is ready (the first one loads her voice model)
+    const [greet] = await Promise.all([api("/api/voice/greeting"), sleep(3000)]);
+    if (!$("call").classList.contains("open")) return;   // hung up while ringing
+    stopRinging();
+    callState("Sisi picked up 💕");
+    $("caption").textContent = greet.text;
+    $("sisiVoice").src = "data:audio/wav;base64," + greet.audio;
+    $("sisiVoice").onended = () => callState("your turn, tap the mic 🎙️");
+    await $("sisiVoice").play();
+  } catch {
+    stopRinging();
+    callState("she couldn't pick up 😵 tap the mic to try anyway");
+  } finally {
+    $("talk").disabled = false;
+  }
+};
+$("hang").onclick = async () => {
+  stopRinging();
+  if (isRecording()) await stopRecording();
+  mic.stream?.getTracks().forEach((t) => t.stop()); mic.stream = null;
+  $("sisiVoice").pause();
+  $("talk").classList.remove("on");
+  $("call").classList.remove("open");
+};
+$("talk").onclick = async () => {
+  if (isRecording()) { await sendVoice(await stopRecording()); return; }
+  $("sisiVoice").pause();
+  try {
+    await startRecording((lvl) => ($("talk").style.boxShadow = `0 0 0 ${4 + lvl * 22}px rgba(244,182,200,.45)`));
+  } catch { return toast("I need your mic permission to hear you 🎙️"); }
+  $("talk").classList.add("on");
+  callState("listening… tap again when you're done");
+};
+
+async function sendVoice(rec) {
+  $("talk").classList.remove("on");
+  $("talk").style.boxShadow = "";
+  const problem = checkRecording(rec);
+  if (problem) { callState(problem); return; }
+  $("talk").disabled = true;
+  callState("Sisi is thinking… 💭");
+  const form = new FormData();
+  form.append("audio", rec.blob, "voice.webm");
+  try {
+    const res = await fetch(`/api/guys/${state.current.id}/voice`, { method: "POST", body: form });
+    if (!res.ok) throw new Error(res.statusText);
+    const data = await res.json();
+    if (data.transcript) addBubble("user", escapeHtml("🎙️ " + data.transcript));
+    addBubble("model", formatReply(data.reply), data.receipts || []);
+    $("caption").textContent = data.reply;
+    callState("Sisi is talking 🔊");
+    $("sisiVoice").src = "data:audio/wav;base64," + data.audio;
+    $("sisiVoice").onended = () => callState("your turn, tap the mic 🎙️");
+    await $("sisiVoice").play();
+    loadGuys(state.current.id).then(loadReceipts);
+  } catch (err) {
+    callState("the line dropped 😵 try again?");
+  } finally {
+    $("talk").disabled = false;
+  }
+}
 $("firstGuyForm").onsubmit = async (e) => {
   e.preventDefault();
   const f = new FormData(e.target);

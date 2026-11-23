@@ -131,8 +131,13 @@
 <div class="call" id="call">
   <div class="big"><svg><use href="#sisi"/></svg></div>
   <h2>Sisi</h2>
-  <div class="note">📞 Voice calls with Sisi are coming soon! For now, tap 🎙️ in the chat to talk instead of typing.</div>
-  <button class="hang" id="hang" title="Hang up">📞</button>
+  <div class="state" id="callState">tap the mic and talk to me 💕</div>
+  <div class="note" id="caption">I'm all ears, bestie.</div>
+  <div class="call-actions">
+    <button class="talk" id="talk" title="Tap to talk, tap again when you're done">🎙️</button>
+    <button class="hang" id="hang" title="Hang up">📞</button>
+  </div>
+  <audio id="sisiVoice"></audio>
 </div>
 
 <script src="/static/app.js"></script>

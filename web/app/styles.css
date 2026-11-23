@@ -143,6 +143,11 @@ button { font-family: var(--sans); }
 @keyframes ring { from { transform: scale(.9); opacity: 1; } to { transform: scale(1.35); opacity: 0; } }
 .call h2 { font-family: var(--serif); font-weight: 400; font-size: 36px; margin: 6px 0 0; }
 .call .note { max-width: 420px; background: rgba(255,255,255,.12); border-radius: 14px; padding: 12px 16px; }
+.call .state { opacity: .9; min-height: 22px; }
+.call-actions { display: flex; gap: 24px; margin-top: 8px; }
+.talk { width: 76px; height: 76px; border-radius: 50%; border: 0; background: #fff; font-size: 30px; cursor: pointer; }
+.talk.on { background: var(--red); animation: pulse 1s infinite; }
+.talk:disabled { opacity: .5; cursor: default; }
 .hang { width: 64px; height: 64px; border-radius: 50%; border: 0; background: #E5484D; color: #fff; font-size: 24px; cursor: pointer; }
 
 /* toast */

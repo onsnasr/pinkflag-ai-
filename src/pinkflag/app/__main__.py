@@ -27,6 +27,18 @@ def main(argv=None) -> None:
     key = get_key("GEMINI_API_KEY")
     app = create_app(Memory(cfg["memory_path"]), lambda: gemini_transport(key, cfg["models"]),
                      history_turns=cfg["history_turns"])
+    # load Whisper + Piper in the background so the first call is instant
+    import threading
+
+    def warm():
+        try:
+            from pinkflag.voice import warm_up
+            warm_up()
+            print("📞 voice ready (Whisper + Piper loaded)", flush=True)
+        except Exception as err:  # noqa: BLE001 - voice extras not installed: chat still works
+            print(f"(voice not available: {err})", flush=True)
+
+    threading.Thread(target=warm, daemon=True).start()
     print(f"🎀 PinkFlag running at http://127.0.0.1:{args.port}")
     uvicorn.run(app, host="127.0.0.1", port=args.port, log_level="warning")
 

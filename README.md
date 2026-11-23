@@ -45,6 +45,17 @@ red flags detected by the model, a vibe meter per guy, a timeline, his mini prof
 automatically as you talk), and **the roster** where a spin-the-wheel lands on the one who
 treats you best. Everything stays on your computer (one SQLite file).
 
+### 📞 Call Sisi (voice, 100% local)
+
+```bash
+pip install -e ".[voice]"
+python -m piper.download_voices --download-dir models/voices en_US-amy-medium
+```
+
+Tap **📞 Call Sisi** → tap the mic, talk, tap again. **Whisper** (runs on your GPU) turns your voice
+into text in any language, Sisi answers, and **Piper** speaks her reply out loud. No audio ever
+leaves your computer.
+
 ## ✨ try the detector alone
 
 ```bash
