@@ -76,6 +76,21 @@ def predict(model, loader, device, loss_fn=None):
     return (preds, total / max(n, 1)) if loss_fn is not None else preds
 
 
+def freeze_bottom(model, embeddings: bool, n_layers: int) -> str:
+    base = getattr(model, model.base_model_prefix)  # e.g. model.roberta
+    parts = []
+    if embeddings:
+        for p in base.embeddings.parameters():
+            p.requires_grad = False
+        parts.append("embeddings")
+    for layer in base.encoder.layer[:n_layers]:
+        for p in layer.parameters():
+            p.requires_grad = False
+    if n_layers:
+        parts.append(f"bottom {n_layers} layers")
+    return " + ".join(parts) or "nothing"
+
+
 def plot_history(history: list[dict], path: Path) -> None:
     """Train vs validation loss + validation macro-F1 per epoch."""
     try:
@@ -138,9 +153,19 @@ def main(argv=None) -> None:
         full = np.ones(len(LABEL_LIST))
         full[[LABEL2ID[c] for c in present]] = w
         weights = torch.tensor(full, dtype=torch.float, device=device)
-    loss_fn = torch.nn.CrossEntropyLoss(weight=weights)
+    # label smoothing: aim for 90% sure instead of 100%, so the model can't over-memorize noisy labels
+    loss_fn = torch.nn.CrossEntropyLoss(weight=weights,
+                                        label_smoothing=t.get("label_smoothing", 0.0))
+    eval_loss_fn = torch.nn.CrossEntropyLoss(weight=weights)  # plain loss, comparable across runs
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=t["lr"], weight_decay=t["weight_decay"])
+    # freezing: keep the embeddings + bottom layers as pre-trained, only adapt the top layers
+    frozen = freeze_bottom(model, t.get("freeze_embeddings", False), t.get("freeze_layers", 0))
+    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    total = sum(p.numel() for p in model.parameters())
+    print(f"🧊 frozen: {frozen} · training {trainable / 1e6:.0f}M of {total / 1e6:.0f}M weights")
+
+    optimizer = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad],
+                                  lr=t["lr"], weight_decay=t["weight_decay"])
     total_steps = len(train_dl) * t["epochs"]
     scheduler = get_linear_schedule_with_warmup(
         optimizer, int(t["warmup_ratio"] * total_steps), total_steps)
@@ -148,7 +173,7 @@ def main(argv=None) -> None:
     scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
 
     out_dir = Path(cfg["output"]["model_dir"])
-    best_f1, bad_epochs, history = -1.0, 0, []
+    best_f1, best_val_loss, bad_epochs, history = -1.0, float("inf"), 0, []
     for epoch in range(1, t["epochs"] + 1):
         model.train()
         start, running = time.time(), 0.0
@@ -169,7 +194,7 @@ def main(argv=None) -> None:
                 print(f"\r  epoch {epoch}  step {step}/{len(train_dl)}  loss {running / step:.3f}",
                       end="", flush=True)
 
-        val_ids, val_loss = predict(model, val_dl, device, loss_fn)
+        val_ids, val_loss = predict(model, val_dl, device, eval_loss_fn)
         val_score = score(val.label, np.array(LABEL_LIST)[val_ids])
         train_loss = running / len(train_dl)
         history.append({"epoch": epoch, "train_loss": train_loss, "val_loss": val_loss, **{
@@ -181,14 +206,19 @@ def main(argv=None) -> None:
               f"val acc {val_score['type_accuracy']:.0%}  macro-F1 {val_score['type_macro_f1']:.2f}"
               f"  ({time.time() - start:.0f}s) {gap}")
 
+        # keep the checkpoint with the best validation macro-F1 (the metric we report)...
         if val_score["type_macro_f1"] > best_f1:
-            best_f1, bad_epochs = val_score["type_macro_f1"], 0
+            best_f1 = val_score["type_macro_f1"]
             model.save_pretrained(out_dir)
             tokenizer.save_pretrained(out_dir)
+            print(f"     💾 best so far (epoch {epoch})")
+        # ...but stop when validation LOSS stops improving: the earliest overfitting signal
+        if val_loss < best_val_loss:
+            best_val_loss, bad_epochs = val_loss, 0
         else:
             bad_epochs += 1
             if bad_epochs >= t["early_stopping_patience"]:
-                print("  ⏹️  early stopping: validation stopped improving")
+                print(f"  ⏹️  early stopping: val loss hasn't improved for {bad_epochs} epochs")
                 break
 
     plot_history(history, Path(cfg["output"]["report_path"]).with_suffix(".png"))
