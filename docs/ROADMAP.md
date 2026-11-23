@@ -36,6 +36,18 @@ Each version has one clear goal and one thing you learn from building it.
 - Frontend built from the mockup; Sisi's avatar (brown hair, glasses) with a few expressions
 - **You learn:** serving ML, APIs, frontend
 
+## v0.5b The roster 💌 (compare the guys)
+- One **case file per guy**, with a status she picks: talking stage · situationship · dating ·
+  it's complicated · ex · custom label
+- Each guy gets a **vibe score** on the 💍 husband material ↔ walking red flag 🚩 meter, computed
+  from his analysed messages (share of red vs green flags, weighted by severity: intimidation and
+  controlling count more than breadcrumbing)
+- **Comparison view:** cards side by side + a flag profile chart per guy ("Amine: mostly
+  controlling · Youssef: mostly breadcrumbing")
+- Sisi gets a `compare_guys` tool: "who's better for me, Amine or Youssef?" → answers from the data
+- Tone rule: scores describe **the messages she shared**, never the whole person; no insulting labels
+- **You learn:** aggregating model outputs into a metric, data modeling (case files), charts
+
 ## v0.6 Screenshots 📸
 - Gemini vision reads the screenshot: messages + who said what (left/right bubbles)
 - Optional comparison with OCR (PaddleOCR / Tesseract)

@@ -9,6 +9,12 @@ No sidebar, no tabs, no dashboard. Just the conversation.
   and **remembers** what you told her before
 - Verdicts (🚩 gaslighting, 💚 green flag...) appear **inside her replies**, not as separate screens
 
+## The roster (compare the guys)
+- A tab/card per guy with the status she picks (talking stage, situationship, dating, it's complicated, ex, custom)
+- Each card: his vibe score on the 💍 ↔ 🚩 meter, top flags, last update
+- Side-by-side comparison + "ask Sisi who's better for you"
+- Playful but respectful: no insulting labels by default; the score is about his messages, not his worth
+
 ## Her
 - Brown hair, glasses, cute, warm big-sister energy
 - A few expressions for the avatar later: 😊 happy · 🤨 side-eye · 😱 "run" · 🥰 proud
