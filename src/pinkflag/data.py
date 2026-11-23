@@ -13,6 +13,18 @@ from pinkflag.taxonomy import validate
 REQUIRED_COLUMNS = ["text", "label", "source"]
 
 
+# Labels we trust most (see docs/LABEL_MAPPING.md): hand-written, strong dataset mappings,
+# and weak labels where heading + keywords agreed. Used for the "clean test" score.
+CLEAN_QUALITY = {"gold", "dataset_strong", "weak_rule_agree", "translated_reviewed"}
+
+
+def drop_quality(df: pd.DataFrame, exclude: list[str] | None) -> pd.DataFrame:
+    """Remove rows whose label_quality is in `exclude` (e.g. loose mappings)."""
+    if not exclude or "label_quality" not in df:
+        return df
+    return df[~df.label_quality.isin(exclude)].reset_index(drop=True)
+
+
 def load_messages(path: str | Path) -> pd.DataFrame:
     df = pd.read_csv(path)
     missing = set(REQUIRED_COLUMNS) - set(df.columns)

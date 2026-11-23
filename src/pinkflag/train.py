@@ -17,7 +17,7 @@ import yaml
 from sklearn.metrics import classification_report, f1_score
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 
-from pinkflag.data import load_messages
+from pinkflag.data import CLEAN_QUALITY, drop_quality, load_messages
 from pinkflag.models.baseline import build_pipeline, top_features
 from pinkflag.taxonomy import GREEN
 
@@ -80,9 +80,12 @@ def score(model, df) -> dict:
 def train_on_splits(cfg: dict):
     d = cfg["data"]
     train, val, test = (pd.read_csv(d[k]) for k in ("train", "val", "test"))
+    train = drop_quality(train, d.get("exclude_label_quality"))
+    val = drop_quality(val, d.get("exclude_label_quality"))
     model = build_pipeline(cfg).fit(train.text, train.label)
 
-    metrics = {"train_rows": len(train), "val": score(model, val), "test": score(model, test)}
+    metrics = {"train_rows": len(train), "val": score(model, val), "test": score(model, test),
+               "test_clean": score(model, test[test.label_quality.isin(CLEAN_QUALITY)])}
     # slices: where does the model do well / badly?
     metrics["test_by_source"] = {s: score(model, g) for s, g in test.groupby("source")}
     metrics["test_by_lang"] = {s: score(model, g) for s, g in test.groupby("lang")}
@@ -93,7 +96,7 @@ def train_on_splits(cfg: dict):
             metrics["test_derja_gold"] = score(model, gold)
 
     print(f"\n📊 trained on {len(train)} rows")
-    for name in ["val", "test"]:
+    for name in ["val", "test", "test_clean"]:
         m = metrics[name]
         print(f"   {name:5s} type acc {m['type_accuracy']:.0%}  macro-F1 {m['type_macro_f1']:.2f}"
               f"  | red-flag acc {m['red_flag_accuracy']:.0%}")

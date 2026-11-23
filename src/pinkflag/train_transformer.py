@@ -31,6 +31,7 @@ from transformers import (
     get_linear_schedule_with_warmup,
 )
 
+from pinkflag.data import CLEAN_QUALITY, drop_quality
 from pinkflag.taxonomy import GREEN, LABELS
 
 LABEL_LIST = list(LABELS)
@@ -137,6 +138,10 @@ def main(argv=None) -> None:
     print(f"🖥️  device: {torch.cuda.get_device_name(0) if device.type == 'cuda' else 'CPU'}")
 
     train, val, test = (pd.read_csv(cfg["data"][k]) for k in ("train", "val", "test"))
+    excluded = cfg["data"].get("exclude_label_quality")
+    train = drop_quality(train, excluded)
+    val = drop_quality(val, excluded)  # the "mock exam" must use the same trusted answer key
+    print(f"📚 training rows: {len(train)} · validation rows: {len(val)}")
     tokenizer = AutoTokenizer.from_pretrained(cfg["model_name"])
     model = AutoModelForSequenceClassification.from_pretrained(
         cfg["model_name"], num_labels=len(LABEL_LIST),
@@ -229,12 +234,17 @@ def main(argv=None) -> None:
     metrics = {"model": cfg["model_name"], "history": history, "best_val_macro_f1": best_f1,
                "test": score(test.label, test_pred)}
     test = test.assign(pred=test_pred)
+    clean = test[test.label_quality.isin(CLEAN_QUALITY)]
+    metrics["test_clean"] = score(clean.label, clean.pred.values)
     for col in ("source", "lang"):
         metrics[f"test_by_{col}"] = {k: score(g.label, g.pred.values) for k, g in test.groupby(col)}
 
     m = metrics["test"]
     print(f"\n📊 TEST  type acc {m['type_accuracy']:.0%}  macro-F1 {m['type_macro_f1']:.2f}"
           f"  | red-flag acc {m['red_flag_accuracy']:.0%}")
+    c = metrics["test_clean"]
+    print(f"🧼 CLEAN TEST (trusted labels only, n={c['n']})  type acc {c['type_accuracy']:.0%}"
+          f"  macro-F1 {c['type_macro_f1']:.2f}  | red-flag acc {c['red_flag_accuracy']:.0%}")
     for col in ("test_by_source", "test_by_lang"):
         for k, s in metrics[col].items():
             print(f"   {k:20s} n={s['n']:4d}  type acc {s['type_accuracy']:.0%}"

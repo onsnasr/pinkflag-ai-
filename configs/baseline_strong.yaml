@@ -1,0 +1,25 @@
+# Experiment: baseline trained on TRUSTED labels only (same test set, for a fair comparison)
+experiment: pinkflag-baseline-strong
+seed: 42
+
+data:
+  train: data/processed/train.csv
+  val: data/processed/val.csv
+  test: data/processed/test.csv
+  test_derja: data/processed/test_derja.csv
+  # error analysis showed these labels disagree with the text most often
+  exclude_label_quality: [dataset_loose, dataset_not_manipulative, translated_unreviewed]
+
+features:
+  word_ngrams: [1, 2]
+  char_ngrams: [2, 5]
+  sublinear_tf: true
+
+model:
+  C: 4.0
+  class_weight: balanced
+  max_iter: 3000
+
+output:
+  model_path: models/baseline_strong.joblib
+  report_path: reports/baseline_strong_metrics.json

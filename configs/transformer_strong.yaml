@@ -1,0 +1,35 @@
+﻿# Fine-tune a multilingual transformer on the merged dataset.
+#
+# Run history (test set):
+#   run 1: lr 2e-5, 6 epochs                    -> undertrained   (acc 44%, macro-F1 0.39)
+#   run 2: lr 3e-5, 15 epochs                   -> overfit after epoch 5 (acc 43%, macro-F1 0.42)
+#   run 3: regularized (this config)            -> see reports/transformer_strong_metrics.json
+experiment: pinkflag-transformer-strong
+seed: 42
+
+data:
+  train: data/processed/train.csv
+  val: data/processed/val.csv
+  test: data/processed/test.csv
+  exclude_label_quality: [dataset_loose, dataset_not_manipulative, translated_unreviewed]
+
+model_name: xlm-roberta-base   # multilingual: English, Arabic, French... (100 languages)
+max_length: 192                # tokens; MentalManip dialogues are long, texts are short
+
+train:
+  epochs: 15
+  batch_size: 16
+  lr: 2.0e-5
+  weight_decay: 0.05           # run 2: 0.01. Stronger pull towards small weights = less memorizing
+  warmup_ratio: 0.1
+  label_smoothing: 0.1         # don't push for 100% confidence on noisy labels
+  freeze_embeddings: true      # keep the pre-trained word knowledge as is
+  freeze_layers: 4             # bottom 4 of 12 layers stay frozen; only the top adapts
+  class_weights: balanced      # rare labels (controlling, breadcrumbing) count more
+  early_stopping_patience: 3   # stop when VALIDATION LOSS hasn't improved for 3 epochs
+  fp16: true                   # half precision on GPU: faster, less memory
+
+output:
+  model_dir: models/transformer_strong
+  report_path: reports/transformer_strong_metrics.json
+

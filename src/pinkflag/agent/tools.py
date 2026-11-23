@@ -11,7 +11,9 @@ from pinkflag.agent.memory import Memory
 from pinkflag.models.baseline import predict
 from pinkflag.taxonomy import LABELS
 
-MODEL_CANDIDATES = ["models/baseline_merged.joblib", "models/baseline.joblib"]
+# best first: trained on trusted labels only (66% on the clean test set, see README)
+MODEL_CANDIDATES = ["models/baseline_strong.joblib", "models/baseline_merged.joblib",
+                    "models/baseline.joblib"]
 
 DECLARATIONS = [
     {
