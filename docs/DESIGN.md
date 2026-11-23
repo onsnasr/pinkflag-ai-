@@ -1,30 +1,33 @@
 # 💖 Design notes
 
-## Vibe
-Calm, editorial, "journal" feel (elegant serif headlines, airy cards, sidebar
-navigation, floating assistant chat), but in **shades of pink** instead of green.
+## The product: one conversation
+PinkFlag is **one chat with her**, the big sister, like texting a friend on Messenger.
+No sidebar, no tabs, no dashboard. Just the conversation.
 
-## Layout
-- **Sidebar** (deep rose): logo + nav: *Check a chat* · *History* · *Red flag guide* · *About*
-- **Hero card**: big serif headline
-  > **Is he husband material 💍 or a walking red flag 🚩?**
-  with one button: **Upload the screenshot**
-- **Stat cards**: messages analysed · flags found · green flags
-- **Results**: one card per message, flagged ones highlighted, with the label chip (😡 intimidation, ⛓️ controlling...) and confidence
-- **Floating "Ask PinkFlag" chat** (bottom right): the agent explains, answers follow-ups, can take images
+- Her messages come with her **profile bubble** (round avatar), like Messenger
+- You type, paste his texts, or drop a screenshot; she replies, asks follow-ups,
+  and **remembers** what you told her before
+- Verdicts (🚩 gaslighting, 💚 green flag...) appear **inside her replies**, not as separate screens
 
-## Palette (draft)
+## Her
+- Brown hair, glasses, cute, warm big-sister energy
+- A few expressions for the avatar later: 😊 happy · 🤨 side-eye · 😱 "run" · 🥰 proud
+
+## Language
+- **Mostly English (~90%).** No language picker: she detects the language you write in
+  and answers in the same one (English, Derja, French, mixed...).
+
+## Colors (from the mockup)
 | token | hex | use |
 |---|---|---|
-| sidebar | `#5A2340` | deep rose / plum, like a dark green sidebar but pink |
-| hero | `#8E3B5E` | hero card background |
-| accent | `#F4B6C8` | buttons, active nav item |
-| page | `#FFF5F8` | page background (blush white) |
-| card | `#FFFFFF` | cards |
-| text | `#2B1A22` | body text |
-| red flag | `#D7263D` | flagged messages |
-| green flag | `#3E8E6E` | healthy messages |
+| deep rose | `#5A2340` | header, her bubble accents |
+| rose | `#8E3B5E` | your message bubbles / send button |
+| pink | `#F4B6C8` | highlights |
+| blush | `#FFF5F8` | background |
+| her bubble | `#FBEFF3` | her message bubbles |
+| red flag | `#D7263D` | flag chips |
+| green flag | `#3E8E6E` | green flag chips |
 
 ## Type
-- Headlines: elegant serif (e.g. *Fraunces* / *Playfair Display*)
-- Body: clean sans (e.g. *Inter*)
+- Headlines: elegant serif (*Fraunces*)
+- Messages: clean sans (*Inter*)

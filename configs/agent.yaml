@@ -1,0 +1,4 @@
+# Sisi, the PinkFlag agent
+model: gemini-flash-lite-latest   # free tier friendly; switch to gemini-flash-latest for better replies
+history_turns: 30                 # how many past messages she re-reads each turn
+memory_path: data/agent/sisi.db   # local SQLite, gitignored

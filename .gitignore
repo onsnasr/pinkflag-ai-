@@ -28,3 +28,4 @@ Thumbs.db
 # local scratch, not part of the project
 /_drafts/
 /data/processed/
+/data/agent/
