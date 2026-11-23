@@ -51,3 +51,8 @@ def test_greeting_is_synthesized_once():
 
 def test_speakable_strips_emojis_and_markdown():
     assert speakable("heyy **bestie** 💕 that's 🚩") == "heyy bestie that's"
+
+
+def test_speakable_reads_arabizi_numbers_as_letters():
+    assert speakable("ya o5ti, 3lech?") == "ya okhti, alech?"
+    assert speakable("it was 2 am, he sent 5 texts") == "it was 2 am, he sent 5 texts"

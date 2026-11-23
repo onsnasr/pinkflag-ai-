@@ -55,6 +55,16 @@ WHAT YOU REMEMBER ABOUT HER
 """
 
 
-def build_system_prompt(notes: list[str]) -> str:
+VOICE_RULES = """
+YOU ARE ON A VOICE CALL RIGHT NOW
+- Your reply will be read out loud. Keep it SHORT: 1 to 3 short spoken sentences, then one
+  question if needed. No lists, no quotes of long messages, no emojis.
+- Answer what she JUST said first. Only bring up older memories if they clearly connect.
+- Your voice speaks English. If you use a Derja word, spell it the way it sounds, with letters
+  only (okhti, habibti, yezzi), never with numbers (not o5ti).
+"""
+
+
+def build_system_prompt(notes: list[str], voice: bool = False) -> str:
     memory = "\n".join(f"- {n}" for n in notes) if notes else "- (nothing yet, this is a fresh start)"
-    return SYSTEM_PROMPT.format(memory=memory)
+    return SYSTEM_PROMPT.format(memory=memory) + (VOICE_RULES if voice else "")

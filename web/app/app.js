@@ -400,7 +400,7 @@ $("callBtn").onclick = async () => {
   startRinging();
   try {
     // ring at least ~2 times, and until her greeting is ready (the first one loads her voice model)
-    const [greet] = await Promise.all([api("/api/voice/greeting"), sleep(3800)]);
+    const [greet] = await Promise.all([api("/api/voice/greeting"), sleep(3000)]);
     if (!$("call").classList.contains("open")) return;   // hung up while ringing
     stopRinging();
     callState("Sisi picked up 💕");

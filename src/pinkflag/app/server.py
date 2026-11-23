@@ -154,7 +154,7 @@ def create_app(memory: Memory, transport_factory: Callable[[], Transport],
             sisi = Sisi(transport_factory(), memory, tools, session=f"guy-{guy_id}",
                         history_turns=history_turns)
             try:
-                reply = sisi.reply(heard["text"])
+                reply = sisi.reply(heard["text"], voice=True)
             except (requests.RequestException, KeyError, ValueError):
                 reply = "ugh, my brain's servers are busy. try again in a minute?"
             receipts = [_receipt(r) for r in tools.analysed]

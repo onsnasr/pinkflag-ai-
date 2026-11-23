@@ -63,11 +63,27 @@ def transcribe(audio: bytes) -> dict:
     return {"text": text, "language": info.language}
 
 
+ARABIZI = {"3": "a", "5": "kh", "7": "h", "9": "q", "8": "gh", "2": "'"}
+ARABIZI_WORD = re.compile(r"\b(?=\w*[a-zA-Z])(?=\w*[235789])\w+\b")
+
+
+def _arabizi_to_letters(match: re.Match) -> str:
+    """'o5ti' -> 'okhti': numbers inside Derja words are letters, read them as such."""
+    return "".join(ARABIZI.get(c, c) for c in match.group(0))
+
+
 def speakable(text: str) -> str:
     """What Sisi says out loud: no emojis, no markdown, no quote-card clutter."""
+    text = ARABIZI_WORD.sub(_arabizi_to_letters, text)
     text = EMOJI.sub("", text)
     text = re.sub(r"[*_#`>]", "", text)
     return re.sub(r"\s+", " ", text).strip()
+
+
+def warm_up() -> None:
+    """Load both models in advance so the first call doesn't wait ~20 s."""
+    whisper_model()
+    synthesize("hi")
 
 
 def synthesize(text: str) -> bytes:

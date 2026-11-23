@@ -81,11 +81,13 @@ class Sisi:
         contents.append({"role": "user", "parts": [{"text": user_text}]})
         return contents
 
-    def reply(self, user_text: str) -> str:
+    def reply(self, user_text: str, voice: bool = False) -> str:
         contents = self._contents(user_text)
         for _ in range(MAX_TOOL_STEPS):
+            # rebuilt every step: facts she just remembered are visible right away
+            system = build_system_prompt(self._memory_notes(), voice=voice)
             body = {
-                "systemInstruction": {"parts": [{"text": build_system_prompt(self._memory_notes())}]},
+                "systemInstruction": {"parts": [{"text": system}]},
                 "contents": contents,
                 "tools": [{"functionDeclarations": DECLARATIONS}],
                 "generationConfig": {"temperature": 0.8},
