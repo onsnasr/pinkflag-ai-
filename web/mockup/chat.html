@@ -110,6 +110,36 @@
   .notes { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
   .notes li { background: var(--blush); border-radius: 10px; padding: 9px 12px; font-size: 14px; }
 
+  /* roster + dice */
+  .roster-btn { border: 1px solid var(--plum); background: #fff; color: var(--plum); border-radius: 10px; padding: 8px 14px; font: 600 14px var(--sans); cursor: pointer; margin-right: 8px; }
+  .overlay { position: fixed; inset: 0; background: rgba(43,26,34,.45); display: none; place-items: center; z-index: 20; padding: 16px; }
+  .overlay.open { display: grid; }
+  .roster { background: var(--blush); border-radius: 22px; width: min(980px, 100%); max-height: 92vh; overflow-y: auto; padding: 28px; box-shadow: 0 30px 80px rgba(90,35,64,.35); }
+  .roster-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .roster-head h2 { font-family: var(--serif); font-weight: 400; font-size: 32px; margin: 0; flex: 1; }
+  .close { border: 0; background: transparent; font-size: 22px; cursor: pointer; color: var(--muted); }
+  .roster .sub { color: var(--muted); margin: 0 0 22px; }
+  .guys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .guy { background: #fff; border: 2px solid var(--border); border-radius: 18px; padding: 18px; transition: transform .15s, border-color .15s, box-shadow .15s; }
+  .guy.hot { border-color: var(--rose); transform: translateY(-4px); box-shadow: 0 10px 24px rgba(142,59,94,.2); }
+  .guy.win { border-color: var(--green); box-shadow: 0 0 0 4px var(--green-bg), 0 14px 30px rgba(62,142,110,.25); transform: translateY(-6px) scale(1.02); }
+  .guy .face { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; font-size: 26px; background: var(--her); margin-bottom: 10px; }
+  .guy h3 { margin: 0; font-size: 19px; }
+  .status { display: inline-block; margin: 6px 0 14px; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 4px 10px; background: var(--her); color: var(--plum); }
+  .mini { height: 8px; border-radius: 999px; background: linear-gradient(90deg, var(--green), #F2C14E, var(--red)); position: relative; margin: 6px 0 8px; }
+  .mini i { position: absolute; top: -5px; width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 3px solid var(--plum); transform: translateX(-50%); }
+  .score { font-size: 13px; color: var(--muted); }
+  .tops { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .dice-row { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 26px 0 8px; flex-wrap: wrap; }
+  .dice { font-size: 54px; display: inline-block; }
+  .dice.spin { animation: roll .35s linear infinite; }
+  @keyframes roll { to { transform: rotate(360deg); } }
+  .roll { border: 0; background: var(--rose); color: #fff; border-radius: 14px; padding: 14px 26px; font: 600 17px var(--sans); cursor: pointer; }
+  .roll:disabled { opacity: .6; cursor: default; }
+  .reveal { display: none; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; margin-top: 16px; }
+  .reveal.show { display: flex; }
+  .reveal .avatar { width: 44px; height: 44px; flex: none; }
+
   /* phone */
   @media (max-width: 900px) {
     .split { grid-template-columns: 1fr; }
@@ -121,6 +151,8 @@
     .who, .thread, .composer { padding-left: 16px; padding-right: 16px; }
     .row { max-width: 92%; }
     .top .new { display: none; }
+    .guys { grid-template-columns: 1fr; }
+    .roster { padding: 20px 16px; }
   }
 </style>
 </head>
@@ -153,11 +185,13 @@
   <header class="top">
     <div class="brand"><span>🎀</span> PinkFlag</div>
     <nav class="case">
-      <button class="on">Amine · 2 months</button>
-      <button>Youssef · talking stage</button>
+      <button class="on">Amine · talking stage</button>
+      <button>Youssef · situationship</button>
+      <button>Karim · talking stage</button>
       <button>+ new guy</button>
     </nav>
     <div class="spacer"></div>
+    <button class="roster-btn" id="openRoster">💌 The roster</button>
     <button class="receipts-toggle" id="toggle">🧾 Receipts</button>
     <button class="new">+ New chat</button>
   </header>
@@ -260,6 +294,90 @@
     </aside>
   </div>
 </div>
+
+<!-- THE ROSTER: compare the guys + roll the dice -->
+<div class="overlay" id="roster">
+  <div class="roster">
+    <div class="roster-head">
+      <h2>💌 The roster</h2>
+      <button class="close" id="closeRoster">✕</button>
+    </div>
+    <p class="sub">Everyone you're talking to right now, scored from the messages you shared with Sisi.</p>
+
+    <div class="guys">
+      <div class="guy" data-name="Amine" data-score="78">
+        <div class="face">🧢</div>
+        <h3>Amine</h3>
+        <span class="status">talking stage · 2 months</span>
+        <div class="mini"><i style="left:78%"></i></div>
+        <div class="score">💍 ←→ 🚩 · <b style="color:var(--red)">leaning red flag</b></div>
+        <div class="tops"><span class="chip">⛓️ controlling ×2</span><span class="chip">🔥 gaslighting ×2</span><span class="chip">😢 guilt trip</span></div>
+      </div>
+      <div class="guy" data-name="Youssef" data-score="52">
+        <div class="face">🎧</div>
+        <h3>Youssef</h3>
+        <span class="status">situationship · 5 months</span>
+        <div class="mini"><i style="left:52%"></i></div>
+        <div class="score">💍 ←→ 🚩 · <b style="color:#B8860B">mixed signals</b></div>
+        <div class="tops"><span class="chip">🍞 breadcrumbing ×4</span><span class="chip good">💚 sweet ×3</span></div>
+      </div>
+      <div class="guy" data-name="Karim" data-score="18">
+        <div class="face">📚</div>
+        <h3>Karim</h3>
+        <span class="status">talking stage · 3 weeks</span>
+        <div class="mini"><i style="left:18%"></i></div>
+        <div class="score">💍 ←→ 🚩 · <b style="color:var(--green)">green flag energy</b></div>
+        <div class="tops"><span class="chip good">💚 consistent ×6</span><span class="chip good">💚 respects plans</span></div>
+      </div>
+    </div>
+
+    <div class="dice-row">
+      <span class="dice" id="dice">🎲</span>
+      <button class="roll" id="roll">Roll the dice</button>
+    </div>
+    <div class="reveal" id="reveal">
+      <svg class="avatar"><use href="#sisi"/></svg>
+      <div id="revealText"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // roster: open/close + the dice "rolls" through the guys and lands on the best vibe score
+  const overlay = document.getElementById("roster");
+  document.getElementById("openRoster").onclick = () => overlay.classList.add("open");
+  document.getElementById("closeRoster").onclick = () => overlay.classList.remove("open");
+  overlay.onclick = e => { if (e.target === overlay) overlay.classList.remove("open"); };
+
+  document.getElementById("roll").onclick = function () {
+    const guys = [...document.querySelectorAll(".guy")];
+    const best = guys.reduce((a, b) => (+b.dataset.score < +a.dataset.score ? b : a));
+    const dice = document.getElementById("dice");
+    const reveal = document.getElementById("reveal");
+    guys.forEach(g => g.classList.remove("win", "hot"));
+    reveal.classList.remove("show");
+    this.disabled = true;
+    dice.classList.add("spin");
+    let i = 0, delay = 90, steps = 14 + guys.indexOf(best);
+    const tick = () => {
+      guys.forEach(g => g.classList.remove("hot"));
+      guys[i % guys.length].classList.add("hot");
+      if (i >= steps && guys[i % guys.length] === best) {
+        dice.classList.remove("spin");
+        best.classList.remove("hot");
+        best.classList.add("win");
+        document.getElementById("revealText").innerHTML =
+          `<b>it's ${best.dataset.name} 💚</b><br>3 weeks in and he's consistent, respects your plans, and has never once made you feel crazy. that's the energy, bestie.`;
+        reveal.classList.add("show");
+        this.disabled = false;
+        return;
+      }
+      i++; delay *= 1.09;
+      setTimeout(tick, delay);
+    };
+    tick();
+  };
+</script>
 
 <script>
   // tiny demo: sending shows your bubble, Sisi "typing", then a canned reply
