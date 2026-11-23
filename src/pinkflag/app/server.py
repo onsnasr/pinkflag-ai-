@@ -12,11 +12,12 @@
 
 Everything stays on this computer: one SQLite file (data/agent/sisi.db).
 """
+import base64
 from collections.abc import Callable
 from pathlib import Path
 
 import requests
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -59,9 +60,23 @@ def _receipt(r: dict) -> dict:
 
 
 def create_app(memory: Memory, transport_factory: Callable[[], Transport],
-               detector=None, history_turns: int = 30) -> FastAPI:
+               detector=None, history_turns: int = 30,
+               stt: Callable[[bytes], dict] | None = None,
+               tts: Callable[[str], bytes] | None = None) -> FastAPI:
     app = FastAPI(title="PinkFlag", docs_url="/api/docs")
     detector = detector or load_detector()
+
+    def _stt(audio: bytes) -> dict:
+        if stt:
+            return stt(audio)
+        from pinkflag.voice import transcribe  # heavy: only loaded when someone calls Sisi
+        return transcribe(audio)
+
+    def _tts(text: str) -> bytes:
+        if tts:
+            return tts(text)
+        from pinkflag.voice import synthesize
+        return synthesize(text)
 
     def get_guy(guy_id: int) -> dict:
         guy = memory.guy(guy_id)
@@ -111,6 +126,25 @@ def create_app(memory: Memory, transport_factory: Callable[[], Transport],
                 "receipts": [], "guy": with_summary(get_guy(guy_id))})
         return {"reply": reply, "receipts": [_receipt(r) for r in tools.analysed],
                 "guy": with_summary(get_guy(guy_id))}
+
+    @app.post("/api/guys/{guy_id}/voice")
+    async def voice(guy_id: int, audio: UploadFile):
+        """📞 Call Sisi: your voice in -> Whisper -> Sisi -> Piper -> her voice out."""
+        get_guy(guy_id)
+        heard = _stt(await audio.read())
+        if not heard["text"]:
+            reply, receipts = "sorry babe, I didn't catch that. say it again?", []
+        else:
+            tools = Toolbox(memory, detector=detector, guy_id=guy_id)
+            sisi = Sisi(transport_factory(), memory, tools, session=f"guy-{guy_id}",
+                        history_turns=history_turns)
+            try:
+                reply = sisi.reply(heard["text"])
+            except (requests.RequestException, KeyError, ValueError):
+                reply = "ugh, my brain's servers are busy. try again in a minute?"
+            receipts = [_receipt(r) for r in tools.analysed]
+        return {"transcript": heard["text"], "language": heard.get("language"), "reply": reply,
+                "receipts": receipts, "audio": base64.b64encode(_tts(reply)).decode()}
 
     @app.get("/api/guys/{guy_id}/receipts")
     def receipts(guy_id: int):

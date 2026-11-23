@@ -310,8 +310,60 @@ $("msg").addEventListener("keydown", (e) => {
 $("msg").addEventListener("input", autosize);
 document.querySelectorAll("#chips button").forEach((b) => (b.onclick = () => send(b.textContent)));
 $("toggleReceipts").onclick = () => $("panel").classList.toggle("open");
-$("callBtn").onclick = () => $("call").classList.add("open");
-$("hang").onclick = () => $("call").classList.remove("open");
+// ---------- 📞 call Sisi: record -> /voice (Whisper -> Sisi -> Piper) -> play her answer ----------
+let recorder = null, chunks = [], micStream = null;
+const callState = (t) => ($("callState").textContent = t);
+
+$("callBtn").onclick = () => {
+  $("call").classList.add("open");
+  callState("tap the mic and talk to me 💕");
+  $("caption").textContent = "I'm all ears, bestie.";
+};
+$("hang").onclick = () => {
+  if (recorder && recorder.state === "recording") recorder.stop();
+  micStream?.getTracks().forEach((t) => t.stop()); micStream = null;
+  $("sisiVoice").pause();
+  $("call").classList.remove("open");
+};
+$("talk").onclick = async () => {
+  if (recorder && recorder.state === "recording") { recorder.stop(); return; }
+  try {
+    micStream = micStream || await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch { return toast("I need your mic permission to hear you 🎙️"); }
+  $("sisiVoice").pause();
+  chunks = [];
+  recorder = new MediaRecorder(micStream);
+  recorder.ondataavailable = (e) => chunks.push(e.data);
+  recorder.onstop = sendVoice;
+  recorder.start();
+  $("talk").classList.add("on");
+  callState("listening… tap again when you're done");
+};
+
+async function sendVoice() {
+  $("talk").classList.remove("on");
+  $("talk").disabled = true;
+  callState("Sisi is thinking… 💭");
+  const form = new FormData();
+  form.append("audio", new Blob(chunks, { type: recorder.mimeType }), "voice.webm");
+  try {
+    const res = await fetch(`/api/guys/${state.current.id}/voice`, { method: "POST", body: form });
+    if (!res.ok) throw new Error(res.statusText);
+    const data = await res.json();
+    if (data.transcript) addBubble("user", escapeHtml("🎙️ " + data.transcript));
+    addBubble("model", formatReply(data.reply), data.receipts || []);
+    $("caption").textContent = data.reply;
+    callState("Sisi is talking 🔊");
+    $("sisiVoice").src = "data:audio/wav;base64," + data.audio;
+    $("sisiVoice").onended = () => callState("your turn, tap the mic 🎙️");
+    await $("sisiVoice").play();
+    loadGuys(state.current.id).then(loadReceipts);
+  } catch (err) {
+    callState("the line dropped 😵 try again?");
+  } finally {
+    $("talk").disabled = false;
+  }
+}
 $("firstGuyForm").onsubmit = async (e) => {
   e.preventDefault();
   const f = new FormData(e.target);
