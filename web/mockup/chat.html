@@ -86,6 +86,9 @@
   .box { display: flex; gap: 10px; align-items: center; background: var(--blush); border: 1px solid var(--border); border-radius: 16px; padding: 8px 8px 8px 14px; }
   .box input { flex: 1; border: 0; background: transparent; font: 15px var(--sans); outline: none; color: var(--text); }
   .icon { border: 0; background: transparent; font-size: 20px; cursor: pointer; }
+  .mic { border: 0; background: #fff; border: 1px solid var(--border); border-radius: 12px; width: 44px; height: 44px; font-size: 18px; cursor: pointer; }
+  .mic.on { background: var(--red); border-color: var(--red); animation: pulse 1s infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(215,38,61,.18); } }
   .send { border: 0; background: var(--rose); color: #fff; border-radius: 12px; width: 44px; height: 44px; font-size: 18px; cursor: pointer; }
 
   /* receipts panel */
@@ -287,6 +290,7 @@
         <div class="box">
           <button class="icon" title="Add a screenshot">📎</button>
           <input id="msg" placeholder="Tell Sisi what he said...">
+          <button class="mic" id="mic" title="Talk instead of typing">🎙️</button>
           <button class="send" id="send">➤</button>
         </div>
       </div>
@@ -480,6 +484,30 @@
   document.getElementById("send").onclick = () => send(input.value);
   input.addEventListener("keydown", e => { if (e.key === "Enter") send(input.value); });
   document.querySelectorAll(".chips button").forEach(b => b.onclick = () => send(b.textContent));
+  // 🎙️ dictation: the browser's free built-in speech recognition writes what you say into the box
+  const mic = document.getElementById("mic");
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let rec = null;
+  mic.onclick = () => {
+    if (!SR) { input.placeholder = "voice typing needs Chrome or Edge 🙏"; return; }
+    if (rec) { rec.stop(); return; }
+    rec = new SR();
+    rec.lang = navigator.language || "en-US";   // follows the browser's language
+    rec.interimResults = true;
+    rec.continuous = true;
+    const before = input.value ? input.value + " " : "";
+    rec.onresult = e => {
+      let text = "";
+      for (const r of e.results) text += r[0].transcript;
+      input.value = before + text;
+    };
+    rec.onend = () => { rec = null; mic.classList.remove("on"); input.placeholder = "Tell Sisi what he said..."; input.focus(); };
+    rec.onerror = () => { input.placeholder = "couldn't hear you, check mic permission 🎙️"; };
+    rec.start();
+    mic.classList.add("on");
+    input.placeholder = "listening… tap 🎙️ again to stop";
+  };
+
   document.getElementById("toggle").onclick = () => document.getElementById("panel").classList.toggle("open");
   thread.scrollTop = thread.scrollHeight;
 </script>

@@ -57,6 +57,7 @@ Each version has one clear goal and one thing you learn from building it.
 - **You learn:** multimodal models, evaluating extraction accuracy
 
 ## v0.7 Voice 🎙️🔊
+- **🎙️ Dictation:** mic button in the message box, speech → text in the box, you edit then send (browser speech recognition, free; prototyped in the mockup)
 - **Voice notes in:** mic button in the chat box; the recorded audio goes to Gemini, which understands
   English / French / Derja mixes (fallback: the browser's built-in speech recognition for English)
 - **Sisi speaks back:** text-to-speech with a warm big-sister voice, ▶️ button on her replies
