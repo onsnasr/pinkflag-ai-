@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PinkFlag · Sisi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+<!-- Sisi's avatar: brown hair, glasses (placeholder until the real drawing) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="sisi" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="50" fill="#F9D3DF"/>
+      <path d="M18 62 C14 30 30 14 50 14 C72 14 87 30 82 64 C80 80 74 92 70 98 L30 98 C24 90 19 78 18 62Z" fill="#5B3A29"/>
+      <rect x="40" y="70" width="20" height="16" rx="6" fill="#B9825F"/>
+      <path d="M20 100 C22 86 34 80 50 80 C66 80 78 86 80 100Z" fill="#8E3B5E"/>
+      <ellipse cx="50" cy="52" rx="23" ry="26" fill="#C68E68"/>
+      <path d="M26 48 C28 28 44 22 56 24 C66 26 74 34 75 46 C66 40 56 34 46 30 C42 38 34 44 26 48Z" fill="#5B3A29"/>
+      <circle cx="40" cy="54" r="8" fill="none" stroke="#2B1A22" stroke-width="2.6"/>
+      <circle cx="61" cy="54" r="8" fill="none" stroke="#2B1A22" stroke-width="2.6"/>
+      <path d="M48 54 L53 54" stroke="#2B1A22" stroke-width="2.6"/>
+      <circle cx="40" cy="55" r="2.4" fill="#2B1A22"/>
+      <circle cx="61" cy="55" r="2.4" fill="#2B1A22"/>
+      <circle cx="33" cy="64" r="4" fill="#E88FAB" opacity=".55"/>
+      <circle cx="68" cy="64" r="4" fill="#E88FAB" opacity=".55"/>
+      <path d="M43 66 C47 71 54 71 58 66" fill="none" stroke="#7A3B2E" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M66 18 l6 -6 l2 8 l8 -1 l-6 6" fill="#E88FAB"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">🎀 PinkFlag</div>
+    <nav class="tabs" id="tabs"></nav>
+    <div class="spacer"></div>
+    <button class="btn" id="openRoster" title="Compare the guys you're talking to">💌 <span class="roster-btn-label">The roster · let the best guy win 🏆</span></button>
+    <button class="btn receipts-toggle" id="toggleReceipts">🧾</button>
+  </header>
+
+  <!-- shown when there are no guys yet -->
+  <section class="empty hidden" id="empty">
+    <div class="hero">
+      <div class="eyebrow">Get the receipts</div>
+      <h2>Is he husband material 💍 or a walking red flag 🚩?</h2>
+      <p>Tell Sisi who you're talking to, then paste his texts. She'll tell you what's really going on.</p>
+      <form class="newguy" id="firstGuyForm">
+        <input name="name" placeholder="his name (or a nickname)" maxlength="40" required>
+        <select name="status">
+          <option>talking stage</option><option>situationship</option><option>dating</option>
+          <option>it's complicated</option><option>ex</option>
+        </select>
+        <button class="btn" type="submit">Start 💬</button>
+      </form>
+    </div>
+  </section>
+
+  <div class="split hidden" id="main">
+    <section class="chat">
+      <div class="who">
+        <svg class="avatar"><use href="#sisi"/></svg>
+        <div>
+          <h1>Sisi</h1>
+          <p><span class="dot"></span>your big sister · I'll always pick up, unlike him 📞</p>
+        </div>
+        <button class="call-btn" id="callBtn">📞 Call Sisi</button>
+      </div>
+      <div class="thread" id="thread"></div>
+      <div class="composer">
+        <div class="chips" id="chips">
+          <button>✍️ help me reply</button>
+          <button>🤔 am I overreacting?</button>
+          <button>💍 husband material or nah?</button>
+        </div>
+        <form class="box" id="composer">
+          <textarea id="msg" rows="1" placeholder="Tell Sisi what he said..."></textarea>
+          <button type="button" class="mic" id="mic" title="Talk instead of typing">🎙️</button>
+          <button type="submit" class="send" id="send">➤</button>
+        </form>
+      </div>
+    </section>
+
+    <aside class="panel" id="panel">
+      <h2>The receipts</h2>
+      <p class="sub" id="receiptsSub"></p>
+      <div class="meter">
+        <div class="labels"><span>💍 husband material</span><span>walking red flag 🚩</span></div>
+        <div class="bar"><div class="pin" id="pin" style="left:50%"></div></div>
+        <div class="result" id="verdict"></div>
+      </div>
+      <div class="grid">
+        <div class="stat"><div class="n" id="statAnalysed">0</div><div class="l">his messages</div></div>
+        <div class="stat"><div class="n" id="statRed">0</div><div class="l">red flags</div></div>
+        <div class="stat"><div class="n" id="statGreen">0</div><div class="l">green flags</div></div>
+      </div>
+      <h3>About him</h3>
+      <ul class="profile" id="profile"></ul>
+      <h3>Timeline</h3>
+      <ul class="timeline" id="timeline"></ul>
+      <h3>What Sisi remembers</h3>
+      <ul class="notes" id="notes"></ul>
+      <button class="danger" id="deleteGuy">🗑️ delete this guy and everything about him</button>
+    </aside>
+  </div>
+</div>
+
+<div class="overlay" id="roster">
+  <div class="roster">
+    <div class="roster-head">
+      <h2>💌 The roster</h2>
+      <button class="close" id="closeRoster">✕</button>
+    </div>
+    <p class="sub"><b style="color:var(--plum)">Let the best guy win 🏆</b> Everyone you're talking to, side by side, scored on how they actually treat you (from the messages you shared with Sisi).</p>
+    <div class="guys" id="guys"></div>
+    <div class="wheel-area">
+      <div class="wheel-wrap">
+        <div class="pointer"></div>
+        <div class="wheel" id="wheel"></div>
+        <button class="hub" id="spin">SPIN</button>
+      </div>
+      <p class="hint">Spin the wheel 🎡 it always lands on the one who treats you best</p>
+    </div>
+    <div class="reveal" id="reveal"><svg class="avatar"><use href="#sisi"/></svg><div id="revealText"></div></div>
+  </div>
+</div>
+
+<div class="call" id="call">
+  <div class="big"><svg><use href="#sisi"/></svg></div>
+  <h2>Sisi</h2>
+  <div class="note">📞 Voice calls with Sisi are coming soon! For now, tap 🎙️ in the chat to talk instead of typing.</div>
+  <button class="hang" id="hang" title="Hang up">📞</button>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

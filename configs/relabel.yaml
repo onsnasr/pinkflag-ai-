@@ -1,0 +1,8 @@
+# Second-opinion labels from Gemini for loosely mapped MentalManip rows
+input: data/interim/mentalmanip.csv
+output: data/interim/mentalmanip_llm_labels.csv
+relabel_quality: [loose, not_manipulative]   # map_quality values to re-check
+models: [gemini-flash-lite-latest, gemini-3.1-flash-lite]
+batch_size: 10
+max_chars: 1200          # long dialogues are truncated
+pause_seconds: 4         # stay under the free-tier per-minute limit

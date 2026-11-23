@@ -31,7 +31,21 @@
 
 Full definitions (what labelers follow) live in [`src/pinkflag/taxonomy.py`](src/pinkflag/taxonomy.py).
 
-## ✨ try it
+## 💬 run the app
+
+```bash
+pip install -e ".[dev]"
+cp .env.example .env            # add your GEMINI_API_KEY
+python -m pinkflag.train --config configs/baseline_strong.yaml   # train the detector
+python -m pinkflag.app          # open http://127.0.0.1:8000
+```
+
+Add the guys you're talking to, paste what they said, and Sisi answers with the receipts:
+red flags detected by the model, a vibe meter per guy, a timeline, his mini profile (filled in
+automatically as you talk), and **the roster** where a spin-the-wheel lands on the one who
+treats you best. Everything stays on your computer (one SQLite file).
+
+## ✨ try the detector alone
 
 ```bash
 pip install -e ".[dev]"

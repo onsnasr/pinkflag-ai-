@@ -6,6 +6,7 @@ sources:
   handwritten:   data/seed/seed_messages.csv           # gold labels, English
   scraped:       data/interim/scraped_weak_labels.csv  # weak labels, English
   mentalmanip:   data/interim/mentalmanip.csv          # dataset labels, dialogues
+  mentalmanip_llm: data/interim/mentalmanip_llm_labels.csv  # Gemini second opinion (agreement filter)
   derja_mt:      data/interim/derja_translated.csv     # machine-translated Derja
   derja_gold:    data/seed/derja_examples.csv          # hand-written Derja: TEST ONLY
 

@@ -8,8 +8,9 @@ from pinkflag.agent.tools import DECLARATIONS, Toolbox
 
 
 class FakeTools(Toolbox):
-    def __init__(self, memory):
+    def __init__(self, memory, guy_id=None):
         self.memory, self.model, self.model_name = memory, None, None
+        self.guy_id, self.scope, self.analysed = guy_id, "default", []
 
     def analyze_messages(self, messages):
         return {"results": [{"message": m, "label": "controlling", "confidence": 0.9}

@@ -54,7 +54,7 @@ def main(argv=None) -> None:
         if text == "/quit":
             break
         if text == "/notes":
-            notes = memory.notes()
+            notes = memory.notes(args.session)
             print("\n".join(f"   📝 {n}" for n in notes) or "   (nothing yet)")
             continue
         if text == "/forget":

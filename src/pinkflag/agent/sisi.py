@@ -61,6 +61,19 @@ class Sisi:
         self.session = session
         self.history_turns = history_turns
         self.on_tool = on_tool  # hook to show tool calls (for learning/debugging)
+        self.tools.scope = session  # notes are remembered per session (= per guy in the app)
+
+    def _memory_notes(self) -> list[str]:
+        notes = list(self.memory.notes(self.session))
+        guy = self.memory.guy(self.tools.guy_id) if self.tools.guy_id is not None else None
+        if guy:
+            notes.insert(0, f"This chat is about {guy['name']} (status: {guy['status']}).")
+            labels = {"works_or_studies": "works/studies", "met_at": "where they met",
+                      "age": "age", "detail": "detail"}
+            for field, label in labels.items():
+                if guy.get(field):
+                    notes.insert(1, f"His profile: {label}: {guy[field]}")
+        return notes
 
     def _contents(self, user_text: str) -> list[dict]:
         contents = [{"role": "user" if role == "user" else "model", "parts": [{"text": text}]}
@@ -72,7 +85,7 @@ class Sisi:
         contents = self._contents(user_text)
         for _ in range(MAX_TOOL_STEPS):
             body = {
-                "systemInstruction": {"parts": [{"text": build_system_prompt(self.memory.notes())}]},
+                "systemInstruction": {"parts": [{"text": build_system_prompt(self._memory_notes())}]},
                 "contents": contents,
                 "tools": [{"functionDeclarations": DECLARATIONS}],
                 "generationConfig": {"temperature": 0.8},

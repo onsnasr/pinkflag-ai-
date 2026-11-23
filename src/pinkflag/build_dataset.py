@@ -50,10 +50,20 @@ def harmonize(cfg: dict) -> tuple[pd.DataFrame, pd.DataFrame]:
 
     mm = _read(s["mentalmanip"])
     if len(mm):
-        mm = mm[mm.label.notna()]  # single-label dialogues only, for now
+        mm = mm[mm.label.notna()].copy()  # single-label dialogues only, for now
+        mm["label_quality"] = "dataset_" + mm.map_quality
+        llm = _read(s.get("mentalmanip_llm", ""))
+        if len(llm):
+            # second annotator: agree -> trusted, disagree -> flagged (the label itself never changes,
+            # so train/val/test splits stay identical across experiments)
+            mm = mm.merge(llm[["conversation_id", "llm_label"]], on="conversation_id", how="left")
+            checked = mm.llm_label.notna() & mm.map_quality.isin(["loose", "not_manipulative"])
+            agree = checked & (mm.llm_label == mm.label)
+            mm.loc[agree, "label_quality"] = "dataset_llm_agree"
+            mm.loc[checked & ~agree, "label_quality"] = "dataset_llm_conflict"
         parts.append(pd.DataFrame({
             "text": mm.text, "label": mm.label, "source": "mentalmanip", "lang": "en",
-            "unit": "dialogue", "label_quality": "dataset_" + mm.map_quality,
+            "unit": "dialogue", "label_quality": mm.label_quality,
             "group": mm.conversation_id}))
 
     mt = _read(s["derja_mt"])
