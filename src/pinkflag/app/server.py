@@ -17,8 +17,8 @@ from collections.abc import Callable
 from pathlib import Path
 
 import requests
-from fastapi import FastAPI, HTTPException, UploadFile
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import FastAPI, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -109,17 +109,43 @@ def create_app(memory: Memory, transport_factory: Callable[[], Transport],
     @app.get("/api/guys/{guy_id}/chat")
     def chat_history(guy_id: int):
         get_guy(guy_id)
-        return [{"role": role, "text": text}
-                for role, text in memory.history(f"guy-{guy_id}", limit=200)]
+        return memory.chat_history(f"guy-{guy_id}")
+
+    @app.get("/api/guys/{guy_id}/images/{message_id}")
+    def message_image(guy_id: int, message_id: int):
+        data = memory.message_image(f"guy-{guy_id}", message_id)
+        if not data:
+            raise HTTPException(404, "Screenshot unavailable")
+        mime = "image/png" if data.startswith(b"\x89PNG") else "image/jpeg"
+        return Response(data, media_type=mime, headers={"Cache-Control": "no-store"})
 
     @app.post("/api/guys/{guy_id}/chat")
     def chat(guy_id: int, body: ChatIn):
+        return chat_reply(guy_id, body.text)
+
+    @app.post("/api/guys/{guy_id}/screenshot")
+    def screenshot(guy_id: int, image: UploadFile, text: str = Form("", max_length=4000)):
+        get_guy(guy_id)
+        limit = 8 * 1024 * 1024
+        data = image.file.read(limit + 1)
+        if len(data) > limit:
+            raise HTTPException(413, "Choose a screenshot under 8 MB.")
+        if data.startswith(b"\x89PNG\r\n\x1a\n"):
+            mime = "image/png"
+        elif data.startswith(b"\xff\xd8\xff"):
+            mime = "image/jpeg"
+        else:
+            raise HTTPException(415, "Choose a PNG or JPEG screenshot.")
+        return chat_reply(guy_id, "[Screenshot] " + text.strip(),
+                          {"mimeType": mime, "data": base64.b64encode(data).decode("ascii")})
+
+    def chat_reply(guy_id: int, text: str, image: dict | None = None):
         get_guy(guy_id)
         tools = Toolbox(memory, detector=detector, guy_id=guy_id)
         sisi = Sisi(transport_factory(), memory, tools, session=f"guy-{guy_id}",
                     history_turns=history_turns)
         try:
-            reply = sisi.reply(body.text)
+            reply = sisi.reply(text, image=image)
         except (requests.RequestException, KeyError, ValueError):
             return JSONResponse(status_code=503, content={
                 "reply": "ugh my brain's servers are busy rn 😵‍💫 try again in a minute, bestie?",

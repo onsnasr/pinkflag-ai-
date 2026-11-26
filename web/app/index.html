@@ -76,7 +76,11 @@
           <button>🤔 am I overreacting?</button>
           <button>💍 husband material or nah?</button>
         </div>
+        <div id="attachment" hidden><img id="draftImage" alt="Screenshot ready to send"> <span id="attachmentName"></span> &middot; Sent to Gemini with your message
+          <button type="button" id="removeImage" aria-label="Remove screenshot">&times;</button></div>
+        <input id="imagePicker" type="file" accept="image/png,image/jpeg" hidden>
         <form class="box" id="composer">
+          <button type="button" class="mic" id="attachImage" aria-label="Attach screenshot" title="Attach screenshot">&#128206;</button>
           <textarea id="msg" rows="1" placeholder="Tell Sisi what he said..."></textarea>
           <button type="button" class="mic" id="mic" title="Talk instead of typing">🎙️</button>
           <button type="submit" class="send" id="send">➤</button>

@@ -78,7 +78,7 @@ async function selectGuy(id) {
 }
 
 // ---------- chat ----------
-function addBubble(role, html, receipts = []) {
+function addBubble(role, html, receipts = [], image = null) {
   const row = document.createElement("div");
   row.className = "row " + (role === "user" ? "me" : "sisi");
   const flags = receipts.length
@@ -89,41 +89,106 @@ function addBubble(role, html, receipts = []) {
         </div>`).join("")}</div>`
     : "";
   row.innerHTML = (role === "user" ? "" : AVATAR) + `<div class="bubble">${html}${flags}</div>`;
+  if (image) {
+    const preview = document.createElement("img");
+    preview.className = "chat-image";
+    preview.alt = "Shared screenshot";
+    preview.src = image instanceof Blob ? URL.createObjectURL(image) : image;
+    if (image instanceof Blob) {
+      preview.onload = preview.onerror = () => URL.revokeObjectURL(preview.src);
+    }
+    row.querySelector(".bubble").prepend(preview);
+  }
   $("thread").appendChild(row);
   $("thread").scrollTop = $("thread").scrollHeight;
   return row;
 }
 
 async function loadChat() {
+  setScreenshot(null);
   $("thread").innerHTML = "";
-  const history = await api(`/api/guys/${state.current.id}/chat`);
+  const id = state.current.id;
+  const history = await api(`/api/guys/${id}/chat`);
+  if (id !== state.current?.id) return;
   if (!history.length) {
     addBubble("model", formatReply(
       `heyy bestie 💕 so, ${state.current.name}. tell me everything.\n` +
       `paste what he said (word for word is best) and I'll get you the receipts.`));
   }
   for (const m of history) {
-    addBubble(m.role, m.role === "user" ? escapeHtml(m.text) : formatReply(m.text));
+    const image = m.image_id ? `/api/guys/${id}/images/${m.image_id}` : null;
+    const text = image ? m.text.replace(/^\[Screenshot\]\s*/, "") : m.text;
+    addBubble(m.role, m.role === "user" ? escapeHtml(text) : formatReply(text), [], image);
   }
 }
 
+let screenshot = null;
+function setScreenshot(file) {
+  if (file && (!["image/png", "image/jpeg"].includes(file.type) || file.size > 8 * 1024 * 1024)) {
+    return toast("Choose a PNG or JPEG under 8 MB.");
+  }
+  const preview = $("draftImage");
+  if (preview.hasAttribute("src")) URL.revokeObjectURL(preview.src);
+  if (file) preview.src = URL.createObjectURL(file);
+  else preview.removeAttribute("src");
+  screenshot = file;
+  $("attachment").hidden = !file;
+  $("attachmentName").textContent = file?.name || "";
+  $("imagePicker").value = "";
+}
+$("attachImage").onclick = () => $("imagePicker").click();
+$("imagePicker").onchange = e => setScreenshot(e.target.files[0]);
+$("removeImage").onclick = () => setScreenshot(null);
+document.addEventListener("paste", e => {
+  if (!state.current || !e.clipboardData || !$("composer").getClientRects().length) return;
+  const imageItem = Array.from(e.clipboardData.items || []).find(
+    item => item.kind === "file" && item.type.startsWith("image/")
+  );
+  const file = imageItem?.getAsFile() ||
+    Array.from(e.clipboardData.files || []).find(f => f.type.startsWith("image/"));
+  if (!file) return;
+  e.preventDefault();
+  setScreenshot(file);
+  $("msg").focus();
+});
+
 async function send(text) {
   text = text.trim();
-  if (!text || state.sending || !state.current) return;
+  const file = screenshot;
+  if ((!text && !file) || state.sending || !state.current) return;
+  const id = state.current.id;
+  setScreenshot(null);
   state.sending = true; $("send").disabled = true;
-  addBubble("user", escapeHtml(text));
+  const sent = addBubble("user", escapeHtml(text), [], file);
   $("msg").value = ""; autosize();
   const typing = addBubble("model", "");
   typing.querySelector(".bubble").className = "bubble typing";
   typing.querySelector(".bubble").innerHTML = "<i></i><i></i><i></i>";
   try {
-    const res = await api(`/api/guys/${state.current.id}/chat`, { method: "POST", body: { text } });
+    let res;
+    if (file) {
+      const form = new FormData();
+      form.append("image", file);
+      form.append("text", text);
+      const response = await fetch(`/api/guys/${id}/screenshot`, { method: "POST", body: form });
+      res = await response.json();
+      if (!response.ok) throw new Error(res.reply || res.detail || response.statusText);
+    } else {
+      res = await api(`/api/guys/${id}/chat`, { method: "POST", body: { text } });
+    }
+    if (state.current?.id !== id) { typing.remove(); return; }
     typing.remove();
     addBubble("model", formatReply(res.reply), res.receipts || []);
     await loadGuys(state.current.id);
     await loadReceipts();
   } catch (err) {
     typing.remove();
+    if (state.current?.id !== id) return;
+    if (file) sent.remove();
+    if (file && !screenshot) {
+      setScreenshot(file);
+      if (!$("msg").value) $("msg").value = text;
+    }
     addBubble("model", formatReply(`oops, something broke 😵 (${err.message})`));
   } finally {
     state.sending = false; $("send").disabled = false; $("msg").focus();

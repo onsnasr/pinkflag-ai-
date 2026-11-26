@@ -50,11 +50,27 @@ class Memory:
             self.db.execute("ALTER TABLE notes ADD COLUMN scope TEXT DEFAULT 'default'")
             self.db.commit()
 
+        if "image" not in {r["name"] for r in self.db.execute("PRAGMA table_info(messages)")}:
+            self.db.execute("ALTER TABLE messages ADD COLUMN image BLOB")
+            self.db.commit()
+
     # conversation ---------------------------------------------------------------
-    def add_message(self, session: str, role: str, text: str) -> None:
-        self.db.execute("INSERT INTO messages (session, role, text, created_at) VALUES (?,?,?,?)",
-                        (session, role, text, _now()))
+    def add_message(self, session: str, role: str, text: str, image: bytes | None = None) -> None:
+        self.db.execute(
+            "INSERT INTO messages (session, role, text, created_at, image) VALUES (?,?,?,?,?)",
+            (session, role, text, _now(), image))
         self.db.commit()
+
+    def chat_history(self, session: str, limit: int = 200) -> list[dict]:
+        rows = self.db.execute(
+            "SELECT role, text, CASE WHEN image IS NOT NULL THEN id END AS image_id "
+            "FROM messages WHERE session = ? ORDER BY id DESC LIMIT ?", (session, limit))
+        return [dict(row) for row in reversed(rows.fetchall())]
+
+    def message_image(self, session: str, message_id: int) -> bytes | None:
+        row = self.db.execute("SELECT image FROM messages WHERE session = ? AND id = ?",
+                              (session, message_id)).fetchone()
+        return row["image"] if row else None
 
     def history(self, session: str, limit: int = 40) -> list[tuple[str, str]]:
         rows = self.db.execute(

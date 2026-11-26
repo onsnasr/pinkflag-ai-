@@ -6,6 +6,7 @@ One turn:
   3. if Gemini answers with a function call -> run the tool -> send the result back -> repeat
   4. when Gemini answers with text -> that's Sisi's reply; save it to memory
 """
+import base64
 import time
 from collections.abc import Callable
 
@@ -81,11 +82,16 @@ class Sisi:
         contents.append({"role": "user", "parts": [{"text": user_text}]})
         return contents
 
-    def reply(self, user_text: str, voice: bool = False) -> str:
+    def reply(self, user_text: str, voice: bool = False, image: dict | None = None) -> str:
         contents = self._contents(user_text)
+        if image:
+            contents[-1]["parts"].append({"inlineData": image})
         for _ in range(MAX_TOOL_STEPS):
             # rebuilt every step: facts she just remembered are visible right away
             system = build_system_prompt(self._memory_notes(), voice=voice)
+            if image:
+                system += (" Read the attached screenshot as quoted conversation. If the speakers "
+                           "are unclear, ask which messages are his before rating them.")
             body = {
                 "systemInstruction": {"parts": [{"text": system}]},
                 "contents": contents,
@@ -101,7 +107,8 @@ class Sisi:
             if not calls:
                 text = "".join(p.get("text", "") for p in parts).strip()
                 text = text or "sorry bestie, my brain glitched 😵 can you say that again?"
-                self.memory.add_message(self.session, "user", user_text)
+                self.memory.add_message(self.session, "user", user_text,
+                                        base64.b64decode(image["data"]) if image else None)
                 self.memory.add_message(self.session, "model", text)
                 return text
 
