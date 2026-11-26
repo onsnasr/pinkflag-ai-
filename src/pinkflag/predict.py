@@ -16,7 +16,7 @@ def main(argv=None) -> None:
         sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description="Score a message with PinkFlag")
     parser.add_argument("text", nargs="*")
-    parser.add_argument("--model", default="models/baseline.joblib")
+    parser.add_argument("--model", default="models/baseline_strong.joblib")
     args = parser.parse_args(argv)
 
     model = joblib.load(args.model)

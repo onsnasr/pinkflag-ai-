@@ -15,12 +15,15 @@ from pinkflag.taxonomy import LABELS
 MODEL_CANDIDATES = ["models/baseline_strong.joblib", "models/baseline_merged.joblib",
                     "models/baseline.joblib"]
 
+CONFIDENCE_THRESHOLD = 0.40
+
 DECLARATIONS = [
     {
         "name": "analyze_messages",
         "description": "Run PinkFlag's red-flag detector on messages HE sent. Returns, for each "
                        "message, the most likely label (green_flag or a red-flag type) with "
-                       "confidence.",
+                       "confidence.If 'unsure' is true, do NOT state the label as fact: say "
+                       "you're not sure and mention the runner_up as another possibility.",
         "parameters": {
             "type": "OBJECT",
             "properties": {"messages": {"type": "ARRAY", "items": {"type": "STRING"},
@@ -94,6 +97,7 @@ class Toolbox:
             label, conf = v.top_labels[0]
             results.append({"message": v.text, "label": label, "display": LABELS[label].display,
                             "confidence": round(conf, 2),
+                            "unsure": conf < CONFIDENCE_THRESHOLD,
                             "runner_up": v.top_labels[1][0] if len(v.top_labels) > 1 else None})
         self.analysed += results
         if self.guy_id is not None:
