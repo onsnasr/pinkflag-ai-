@@ -6,7 +6,7 @@
 import argparse
 import sys
 
-import joblib
+from pinkflag.agent.tools import load_detector
 
 from pinkflag.models.baseline import predict
 
@@ -16,10 +16,12 @@ def main(argv=None) -> None:
         sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description="Score a message with PinkFlag")
     parser.add_argument("text", nargs="*")
-    parser.add_argument("--model", default="models/baseline_strong.joblib")
+    parser.add_argument("--model", help="path to a specific trained model")
     args = parser.parse_args(argv)
 
-    model = joblib.load(args.model)
+    model, _ = load_detector(args.model)
+    if model is None:
+        parser.error("Train a detector first: python -m pinkflag.train --config configs/baseline.yaml")
 
     if args.text:
         print(predict(model, [" ".join(args.text)])[0].pretty())
