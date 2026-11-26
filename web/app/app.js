@@ -81,10 +81,15 @@ async function selectGuy(id) {
 function addBubble(role, html, receipts = [], image = null) {
   const row = document.createElement("div");
   row.className = "row " + (role === "user" ? "me" : "sisi");
+  for (const r of receipts) {
+    if (r.confidence === null && Number.isInteger(r.id)) {
+      $("thread").querySelectorAll(`[data-receipt-id="${r.id}"]`).forEach(card => card.remove());
+    }
+  }
   const flags = receipts.length
     ? `<div class="flags">${receipts.map((r) => `
-        <div class="flag ${r.is_red_flag ? "" : "good"}">
-          <b>${r.emoji} ${escapeHtml(r.name)} · ${Math.round(r.confidence * 100)}%</b>
+        <div data-receipt-id="${Number(r.id)}" class="flag ${r.is_red_flag === null ? "pending" : r.is_red_flag ? "" : "good"}">
+          <b>${r.emoji} ${escapeHtml(r.name)} · ${r.confidence === null ? "updated" : Math.round(r.confidence * 100) + "%"}</b>
           "${escapeHtml(r.text)}"
         </div>`).join("")}</div>`
     : "";
@@ -205,7 +210,8 @@ function autosize() {
 async function loadReceipts() {
   const data = await api(`/api/guys/${state.current.id}/receipts`);
   const g = data.guy;
-  $("receiptsSub").textContent = `${g.emoji} ${g.name} · ${g.analysed} message(s) analysed`;
+  $("receiptsSub").textContent = `${g.emoji} ${g.name} · ${g.analysed} message(s) analysed - ${g.needs_context} need context`;
+  $("pin").hidden = g.score == null;
   $("pin").style.left = (g.score ?? 50) + "%";
   $("verdict").textContent = g.verdict;
   $("verdict").style.color = g.score == null ? "var(--muted)"
@@ -248,9 +254,33 @@ async function loadReceipts() {
   tl.innerHTML = data.timeline.length ? "" : `<li class="muted">nothing analysed yet</li>`;
   for (const r of data.timeline.slice().reverse()) {
     const li = document.createElement("li");
-    li.innerHTML = `<div></div><span class="chip ${r.is_red_flag ? "" : "good"}"></span>`;
+    li.innerHTML = `<div></div><span class="chip ${r.is_red_flag === null ? "pending" : r.is_red_flag ? "" : "good"}"></span>`;
     li.querySelector("div").textContent = `"${r.text}"`;
     li.querySelector(".chip").textContent = `${r.emoji} ${r.name}`;
+    const correct = document.createElement("select");
+    correct.setAttribute("aria-label", "Correct rating for " + r.text);
+    correct.add(new Option("Correct rating...", ""));
+    for (const [value, name] of Object.entries(data.rating_options)) {
+      correct.add(new Option(name, value));
+    }
+    correct.onchange = async () => {
+      if (!correct.value) return;
+      correct.disabled = true;
+      try {
+        await api(`/api/guys/${g.id}/receipts/${r.id}`, {
+          method: "PATCH", body: {label: correct.value}
+        });
+        if (state.current?.id === g.id) {
+          await loadGuys(g.id);
+          await loadChat();
+          await loadReceipts();
+        }
+      } catch (error) {
+        toast(error.message);
+        correct.disabled = false;
+      }
+    };
+    li.appendChild(correct);
     tl.appendChild(li);
   }
 
@@ -285,7 +315,7 @@ function renderRoster() {
       <div class="face">${escapeHtml(g.emoji)}</div>
       <h3></h3><span class="status"></span>
       ${prof ? `<ul class="profile">${prof}</ul>` : ""}
-      <div class="mini"><i style="left:${g.score ?? 50}%"></i></div>
+      <div class="mini"><i ${g.score == null ? "hidden" : ""} style="left:${g.score ?? 50}%"></i></div>
       <div class="muted">💍 ←→ 🚩 · <b class="v"></b></div>
       <div class="tops"></div>`;
     card.querySelector("h3").textContent = g.name;

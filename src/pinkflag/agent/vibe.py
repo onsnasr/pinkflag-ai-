@@ -16,7 +16,7 @@ SEVERITY = {
 def vibe_score(analyses: list[dict]) -> int | None:
     if not analyses:
         return None
-    red = sum(SEVERITY.get(a["label"], 1.0) for a in analyses if a["label"] != GREEN)
+    red = sum(SEVERITY.get(a["label"], 1.0) for a in analyses if a["label"] in SEVERITY)
     green = sum(1.0 for a in analyses if a["label"] == GREEN)
     return round(100 * red / (red + green)) if red + green else None
 
@@ -36,6 +36,6 @@ def summary(analyses: list[dict]) -> dict:
     top = [{"label": k, "emoji": LABELS[k].emoji, "name": LABELS[k].display, "count": n}
            for k, n in counts.most_common() if k in LABELS]
     score = vibe_score(analyses)
-    return {"score": score, "verdict": verdict(score), "top_flags": top,
-            "red_flags": sum(n for k, n in counts.items() if k != GREEN),
-            "green_flags": counts.get(GREEN, 0), "analysed": len(analyses)}
+    return {"score": score, "verdict": "needs context" if analyses and score is None else verdict(score), "top_flags": top,
+            "red_flags": sum(n for k, n in counts.items() if k in SEVERITY),
+            "green_flags": counts.get(GREEN, 0), "needs_context": counts["needs_context"], "analysed": len(analyses)}

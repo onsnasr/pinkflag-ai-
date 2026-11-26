@@ -69,6 +69,8 @@ class Sisi:
         guy = self.memory.guy(self.tools.guy_id) if self.tools.guy_id is not None else None
         if guy:
             notes.insert(0, f"This chat is about {guy['name']} (status: {guy['status']}).")
+            for r in self.memory.analyses(self.tools.guy_id)[-30:]:
+                notes.append(f"Saved receipt {r['id']} ({r['label']}), quoted text: {r['text']!r}")
             labels = {"works_or_studies": "works/studies", "met_at": "where they met",
                       "age": "age", "detail": "detail"}
             for field, label in labels.items():

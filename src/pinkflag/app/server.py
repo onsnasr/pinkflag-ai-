@@ -51,11 +51,15 @@ class ChatIn(BaseModel):
     text: str = Field(min_length=1, max_length=4000)
 
 
+class RatingUpdate(BaseModel):
+    label: str
+
+
 def _receipt(r: dict) -> dict:
     lab = LABELS.get(r["label"])
-    return {"text": r.get("message") or r.get("text"), "label": r["label"],
-            "name": lab.display if lab else r["label"], "emoji": lab.emoji if lab else "",
-            "is_red_flag": lab.is_red_flag if lab else True,
+    return {"id": r.get("id"), "text": r.get("message") or r.get("text"), "label": r["label"],
+            "name": lab.display if lab else "Needs context", "emoji": lab.emoji if lab else "",
+            "is_red_flag": lab.is_red_flag if lab else None,
             "confidence": r["confidence"], "created_at": r.get("created_at")}
 
 
@@ -187,10 +191,21 @@ def create_app(memory: Memory, transport_factory: Callable[[], Transport],
         return {"transcript": heard["text"], "language": heard.get("language"), "reply": reply,
                 "receipts": receipts, "audio": base64.b64encode(_tts(reply)).decode()}
 
+    @app.patch("/api/guys/{guy_id}/receipts/{receipt_id}")
+    def correct_rating(guy_id: int, receipt_id: int, body: RatingUpdate):
+        if body.label not in LABELS and body.label != "needs_context":
+            raise HTTPException(422, "Unknown rating")
+        updated = memory.revise_analysis(guy_id, receipt_id, body.label)
+        if updated is None:
+            raise HTTPException(404, "Receipt not found")
+        return _receipt(updated)
+
     @app.get("/api/guys/{guy_id}/receipts")
     def receipts(guy_id: int):
         guy = with_summary(get_guy(guy_id))
         return {"guy": guy, "timeline": [_receipt(a) for a in memory.analyses(guy_id)],
+                "rating_options": {**{k: v.display for k, v in LABELS.items()},
+                                   "needs_context": "Needs context"},
                 "notes": memory.notes(f"guy-{guy_id}")}
 
     @app.get("/api/roster/best")

@@ -54,6 +54,11 @@ class Memory:
             self.db.execute("ALTER TABLE messages ADD COLUMN image BLOB")
             self.db.commit()
 
+        # Older detector versions saved low-confidence guesses as final labels.
+        with self.db:
+            self.db.execute("UPDATE analyses SET label = 'needs_context' "
+                            "WHERE confidence < 0.40 AND label != 'needs_context'")
+
     # conversation ---------------------------------------------------------------
     def add_message(self, session: str, role: str, text: str, image: bytes | None = None) -> None:
         self.db.execute(
@@ -127,14 +132,24 @@ class Memory:
 
     # analysed messages ----------------------------------------------------------
     def add_analyses(self, guy_id: int, results: list[dict]) -> None:
-        self.db.executemany(
-            "INSERT INTO analyses (guy_id, text, label, confidence, created_at) VALUES (?,?,?,?,?)",
-            [(guy_id, r["message"], r["label"], r["confidence"], _now()) for r in results])
-        self.db.commit()
+        with self.db:
+            for r in results:
+                cursor = self.db.execute(
+                    "INSERT INTO analyses (guy_id, text, label, confidence, created_at) VALUES (?,?,?,?,?)",
+                    (guy_id, r["message"], r["label"], r["confidence"], _now()))
+                r["id"] = cursor.lastrowid
+
+    def revise_analysis(self, guy_id: int, receipt_id: int, label: str) -> dict | None:
+        with self.db:
+            row = self.db.execute(
+                "UPDATE analyses SET label = ?, confidence = NULL WHERE guy_id = ? AND id = ? "
+                "RETURNING id, text AS message, label, confidence",
+                (label, guy_id, receipt_id)).fetchone()
+        return dict(row) if row else None
 
     def analyses(self, guy_id: int) -> list[dict]:
         return [dict(r) for r in self.db.execute(
-            "SELECT text, label, confidence, created_at FROM analyses WHERE guy_id = ? ORDER BY id",
+            "SELECT id, text, label, confidence, created_at FROM analyses WHERE guy_id = ? ORDER BY id",
             (guy_id,))]
 
     def forget_everything(self) -> None:
