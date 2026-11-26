@@ -335,7 +335,7 @@ function renderRoster() {
   $("wheel").style.background = `conic-gradient(${state.guys.map((_, i) =>
     `${SLICE_COLORS[i % SLICE_COLORS.length]} ${i * slice}deg ${(i + 1) * slice}deg`).join(", ")})`;
   $("wheel").innerHTML = state.guys.map((g, i) =>
-    `<span style="transform: rotate(${i * slice + slice / 2}deg) translateY(-96px) translateX(-50%)">${escapeHtml(g.emoji)} ${escapeHtml(g.name)}</span>`).join("");
+    `<span style="transform: rotate(${i * slice + slice / 2}deg) translateY(-32cqw) translateX(-50%)">${escapeHtml(g.emoji)} ${escapeHtml(g.name)}</span>`).join("");
 }
 
 $("openRoster").onclick = async () => {
