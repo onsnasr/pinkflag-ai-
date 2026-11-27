@@ -17,6 +17,9 @@ from sklearn.pipeline import FeatureUnion, Pipeline
 from pinkflag.taxonomy import GREEN, LABELS
 
 
+CONFIDENCE_THRESHOLD = 0.40
+
+
 def build_pipeline(cfg: dict) -> Pipeline:
     f, m = cfg["features"], cfg["model"]
     features = FeatureUnion([
@@ -49,6 +52,8 @@ class Verdict:
         head = "🚩 RED FLAG" if self.is_red_flag else "💚 seems fine"
         lines = [f'"{self.text}"',
                  f"{head}  (all red-flag types combined: {self.red_flag_prob:.0%})"]
+        if self.top_labels[0][1] < CONFIDENCE_THRESHOLD:
+            lines[1] = "Needs context (low-confidence prediction)"
         for key, p in self.top_labels:
             lab = LABELS[key]
             lines.append(f"   {lab.emoji} {lab.display:28s} {p:5.0%} {'█' * int(p * 25)}")

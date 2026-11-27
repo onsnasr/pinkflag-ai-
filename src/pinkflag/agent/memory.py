@@ -50,11 +50,32 @@ class Memory:
             self.db.execute("ALTER TABLE notes ADD COLUMN scope TEXT DEFAULT 'default'")
             self.db.commit()
 
+        if "image" not in {r["name"] for r in self.db.execute("PRAGMA table_info(messages)")}:
+            self.db.execute("ALTER TABLE messages ADD COLUMN image BLOB")
+            self.db.commit()
+
+        # Older detector versions saved low-confidence guesses as final labels.
+        with self.db:
+            self.db.execute("UPDATE analyses SET label = 'needs_context' "
+                            "WHERE confidence < 0.40 AND label != 'needs_context'")
+
     # conversation ---------------------------------------------------------------
-    def add_message(self, session: str, role: str, text: str) -> None:
-        self.db.execute("INSERT INTO messages (session, role, text, created_at) VALUES (?,?,?,?)",
-                        (session, role, text, _now()))
+    def add_message(self, session: str, role: str, text: str, image: bytes | None = None) -> None:
+        self.db.execute(
+            "INSERT INTO messages (session, role, text, created_at, image) VALUES (?,?,?,?,?)",
+            (session, role, text, _now(), image))
         self.db.commit()
+
+    def chat_history(self, session: str, limit: int = 200) -> list[dict]:
+        rows = self.db.execute(
+            "SELECT role, text, CASE WHEN image IS NOT NULL THEN id END AS image_id "
+            "FROM messages WHERE session = ? ORDER BY id DESC LIMIT ?", (session, limit))
+        return [dict(row) for row in reversed(rows.fetchall())]
+
+    def message_image(self, session: str, message_id: int) -> bytes | None:
+        row = self.db.execute("SELECT image FROM messages WHERE session = ? AND id = ?",
+                              (session, message_id)).fetchone()
+        return row["image"] if row else None
 
     def history(self, session: str, limit: int = 40) -> list[tuple[str, str]]:
         rows = self.db.execute(
@@ -111,14 +132,24 @@ class Memory:
 
     # analysed messages ----------------------------------------------------------
     def add_analyses(self, guy_id: int, results: list[dict]) -> None:
-        self.db.executemany(
-            "INSERT INTO analyses (guy_id, text, label, confidence, created_at) VALUES (?,?,?,?,?)",
-            [(guy_id, r["message"], r["label"], r["confidence"], _now()) for r in results])
-        self.db.commit()
+        with self.db:
+            for r in results:
+                cursor = self.db.execute(
+                    "INSERT INTO analyses (guy_id, text, label, confidence, created_at) VALUES (?,?,?,?,?)",
+                    (guy_id, r["message"], r["label"], r["confidence"], _now()))
+                r["id"] = cursor.lastrowid
+
+    def revise_analysis(self, guy_id: int, receipt_id: int, label: str) -> dict | None:
+        with self.db:
+            row = self.db.execute(
+                "UPDATE analyses SET label = ?, confidence = NULL WHERE guy_id = ? AND id = ? "
+                "RETURNING id, text AS message, label, confidence",
+                (label, guy_id, receipt_id)).fetchone()
+        return dict(row) if row else None
 
     def analyses(self, guy_id: int) -> list[dict]:
         return [dict(r) for r in self.db.execute(
-            "SELECT text, label, confidence, created_at FROM analyses WHERE guy_id = ? ORDER BY id",
+            "SELECT id, text, label, confidence, created_at FROM analyses WHERE guy_id = ? ORDER BY id",
             (guy_id,))]
 
     def forget_everything(self) -> None:

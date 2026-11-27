@@ -96,3 +96,25 @@ def test_update_and_delete_guy():
     assert client.delete(f"/api/guys/{g['id']}").status_code == 204
     assert client.get("/api/guys").json() == []
     assert client.get(f"/api/guys/{g['id']}/chat").status_code == 404
+
+def test_two_year_followup_revises_pending_receipt(detector):
+    quote = "I love you very very much"
+    gemini = scripted_gemini(
+        call("analyze_messages", {"messages": [quote]}),
+        text("How long have you been dating?"),
+        call("revise_rating", {"receipt_id": 1, "label": "green_flag"}),
+        text("Given that context, the message sounds affectionate."),
+    )
+    client = TestClient(create_app(Memory(":memory:"), gemini, detector=detector))
+    gid = client.post("/api/guys", json={"name": "Nour"}).json()["id"]
+    path = f"/api/guys/{gid}"
+    first = client.post(path + "/chat", json={"text": f"He said: {quote}"}).json()
+    assert first["receipts"][0]["label"] == "needs_context"
+    assert first["guy"]["score"] is None
+    assert first["guy"]["red_flags"] == first["guy"]["green_flags"] == 0
+    final = client.post(path + "/chat", json={"text": "Two years. It felt affectionate."}).json()
+    assert final["guy"]["analysed"] == final["guy"]["green_flags"] == 1
+    assert final["guy"]["score"] == final["guy"]["needs_context"] == 0
+    assert client.patch(path + "/receipts/1", json={"label": "needs_context"}).is_success
+    assert client.get(path + "/receipts").json()["guy"]["score"] is None
+    assert client.patch("/api/guys/999/receipts/1", json={"label": "green_flag"}).status_code == 404

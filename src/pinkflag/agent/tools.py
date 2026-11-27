@@ -8,21 +8,19 @@ from pathlib import Path
 import joblib
 
 from pinkflag.agent.memory import PROFILE_FIELDS, Memory
-from pinkflag.models.baseline import predict
+from pinkflag.models.baseline import CONFIDENCE_THRESHOLD, predict
 from pinkflag.taxonomy import LABELS
 
 # best first: trained on trusted labels only (66% on the clean test set, see README)
 MODEL_CANDIDATES = ["models/baseline_strong.joblib", "models/baseline_merged.joblib",
                     "models/baseline.joblib"]
 
-CONFIDENCE_THRESHOLD = 0.40
-
 DECLARATIONS = [
     {
         "name": "analyze_messages",
         "description": "Run PinkFlag's red-flag detector on messages HE sent. Returns, for each "
                        "message, the most likely label (green_flag or a red-flag type) with "
-                       "confidence.If 'unsure' is true, do NOT state the label as fact: say "
+                       "confidence. If 'unsure' is true, do NOT state the label as fact: say "
                        "you're not sure and mention the runner_up as another possibility.",
         "parameters": {
             "type": "OBJECT",
@@ -30,6 +28,14 @@ DECLARATIONS = [
                                         "description": "His messages, one per item, verbatim."}},
             "required": ["messages"],
         },
+    },
+    {
+        "name": "revise_rating",
+        "description": "Correct an existing receipt when context changes your assessment of his message.",
+        "parameters": {"type": "OBJECT", "properties": {
+            "receipt_id": {"type": "INTEGER"},
+            "label": {"type": "STRING", "enum": list(LABELS)},
+        }, "required": ["receipt_id", "label"]},
     },
     {
         "name": "explain_flag",
@@ -95,14 +101,26 @@ class Toolbox:
         results = []
         for v in predict(self.model, [m for m in messages if m.strip()]):
             label, conf = v.top_labels[0]
-            results.append({"message": v.text, "label": label, "display": LABELS[label].display,
+            pending = conf < CONFIDENCE_THRESHOLD
+            results.append({"message": v.text, "label": "needs_context" if pending else label,
+                            "display": "Needs context" if pending else LABELS[label].display,
                             "confidence": round(conf, 2),
-                            "unsure": conf < CONFIDENCE_THRESHOLD,
+                            "unsure": pending,
                             "runner_up": v.top_labels[1][0] if len(v.top_labels) > 1 else None})
         self.analysed += results
         if self.guy_id is not None:
             self.memory.add_analyses(self.guy_id, results)
         return {"model": self.model_name, "results": results}
+
+    def revise_rating(self, receipt_id: int, label: str) -> dict:
+        if self.guy_id is None or label not in LABELS:
+            return {"saved": False}
+        receipt = self.memory.revise_analysis(self.guy_id, receipt_id, label)
+        if receipt is None:
+            return {"saved": False, "reason": "Receipt not found for this profile"}
+        self.analysed = [r for r in self.analysed if r.get("id") != receipt_id]
+        self.analysed.append(receipt)
+        return {"saved": True, "receipt": receipt}
 
     def explain_flag(self, label: str) -> dict:
         lab = LABELS.get(label)

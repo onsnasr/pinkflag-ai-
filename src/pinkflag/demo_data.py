@@ -11,6 +11,13 @@ from pinkflag.agent.memory import Memory
 from pinkflag.agent.tools import Toolbox
 
 DEMO = [
+    {"name": "Nour (demo)", "emoji": "\U0001f3a8", "status": "dating",
+     "profile": {"works_or_studies": "software engineer", "met_at": "at work",
+                 "age": "24", "detail": "likes painting"},
+     "his_messages": ["I love you very very much"],
+     "notes": [],
+     "chat": [("user", 'He texted me "I love you very very much".'),
+              ("model", "How long have you been together, and how did that message feel to you?")]},
     {"name": "Youssef", "emoji": "🎧", "status": "situationship",
      "profile": {"works_or_studies": "studies engineering", "met_at": "Instagram",
                  "age": "23", "detail": "DJs on weekends"},
