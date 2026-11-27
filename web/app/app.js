@@ -17,6 +17,37 @@ const escapeHtml = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
 // escape first, then allow **bold** from Sisi's replies
 const formatReply = (s) => escapeHtml(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
 
+// ---------- privacy notice (first visit) + "delete all my data" ----------
+document.addEventListener("DOMContentLoaded", () => {
+  const seen = (() => { try { return localStorage.getItem("pinkflag-privacy-ok"); } catch { return null; } })();
+  if (!seen) document.getElementById("privacy").classList.add("open");
+  document.getElementById("privacyOk").onclick = () => {
+    try { localStorage.setItem("pinkflag-privacy-ok", "1"); } catch { /* private window */ }
+    document.getElementById("privacy").classList.remove("open");
+  };
+  document.getElementById("deleteMe").onclick = async () => {
+    if (!confirm("Delete every guy, chat and screenshot you added? This can't be undone.")) return;
+    await fetch("/api/me", { method: "DELETE" });
+    location.reload();
+  };
+});
+
+// ---------- privacy: an anonymous random ID per browser, so visitors never see each other's data ----------
+const VISITOR = (() => {
+  try {
+    let id = localStorage.getItem("pinkflag-visitor");
+    if (!id) { id = crypto.randomUUID(); localStorage.setItem("pinkflag-visitor", id); }
+    return id;
+  } catch { return crypto.randomUUID(); }  // private window: a fresh ID per visit
+})();
+const _fetch = window.fetch.bind(window);
+window.fetch = (url, opts = {}) => {
+  if (String(url).startsWith("/api/")) {
+    opts = { ...opts, headers: { ...(opts.headers || {}), "X-PinkFlag-User": VISITOR } };
+  }
+  return _fetch(url, opts);
+};
+
 async function api(path, options = {}) {
   const res = await fetch(path, {
     headers: { "Content-Type": "application/json" }, ...options,
@@ -121,7 +152,7 @@ async function loadChat() {
       `paste what he said (word for word is best) and I'll get you the receipts.`));
   }
   for (const m of history) {
-    const image = m.image_id ? `/api/guys/${id}/images/${m.image_id}` : null;
+    const image = m.image_id ? `/api/guys/${id}/images/${m.image_id}?u=${VISITOR}` : null;
     const text = image ? m.text.replace(/^\[Screenshot\]\s*/, "") : m.text;
     addBubble(m.role, m.role === "user" ? escapeHtml(text) : formatReply(text), [], image);
   }

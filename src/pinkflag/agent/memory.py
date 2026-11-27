@@ -49,6 +49,10 @@ class Memory:
         if "scope" not in cols:
             self.db.execute("ALTER TABLE notes ADD COLUMN scope TEXT DEFAULT 'default'")
             self.db.commit()
+        # public hosting: every guy belongs to one (anonymous) visitor
+        if "owner" not in {r["name"] for r in self.db.execute("PRAGMA table_info(guys)")}:
+            self.db.execute("ALTER TABLE guys ADD COLUMN owner TEXT DEFAULT 'local'")
+            self.db.commit()
 
         if "image" not in {r["name"] for r in self.db.execute("PRAGMA table_info(messages)")}:
             self.db.execute("ALTER TABLE messages ADD COLUMN image BLOB")
@@ -102,18 +106,33 @@ class Memory:
             "SELECT note FROM notes WHERE scope = ? ORDER BY id", (scope,))]
 
     # the roster -----------------------------------------------------------------
-    def add_guy(self, name: str, status: str = "talking stage", emoji: str = "💌") -> int:
-        cur = self.db.execute("INSERT INTO guys (name, status, emoji, created_at) VALUES (?,?,?,?)",
-                              (name.strip(), status.strip(), emoji, _now()))
+    def add_guy(self, name: str, status: str = "talking stage", emoji: str = "💌",
+                owner: str = "local") -> int:
+        cur = self.db.execute(
+            "INSERT INTO guys (name, status, emoji, created_at, owner) VALUES (?,?,?,?,?)",
+            (name.strip(), status.strip(), emoji, _now(), owner))
         self.db.commit()
         return cur.lastrowid
 
-    def guy(self, guy_id: int) -> dict | None:
+    def guy(self, guy_id: int, owner: str | None = None) -> dict | None:
+        """With an owner, only returns the guy if he belongs to that visitor."""
         row = self.db.execute("SELECT * FROM guys WHERE id = ?", (guy_id,)).fetchone()
-        return dict(row) if row else None
+        if row is None or (owner is not None and row["owner"] != owner):
+            return None
+        return dict(row)
 
-    def guys(self) -> list[dict]:
-        return [dict(r) for r in self.db.execute("SELECT * FROM guys ORDER BY id")]
+    def guys(self, owner: str | None = None) -> list[dict]:
+        if owner is None:
+            return [dict(r) for r in self.db.execute("SELECT * FROM guys ORDER BY id")]
+        return [dict(r) for r in self.db.execute(
+            "SELECT * FROM guys WHERE owner = ? ORDER BY id", (owner,))]
+
+    def delete_owner(self, owner: str) -> int:
+        """'Delete my data': removes every guy of this visitor and everything about them."""
+        ids = [g["id"] for g in self.guys(owner)]
+        for gid in ids:
+            self.delete_guy(gid)
+        return len(ids)
 
     def update_guy(self, guy_id: int, **fields) -> None:
         fields = {k: str(v).strip() for k, v in fields.items() if k in GUY_FIELDS and v is not None}

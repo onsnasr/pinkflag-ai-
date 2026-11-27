@@ -13,11 +13,14 @@
 Everything stays on this computer: one SQLite file (data/agent/sisi.db).
 """
 import base64
+import re
+import time
 from collections.abc import Callable
+from contextvars import ContextVar
 from pathlib import Path
 
 import requests
-from fastapi import FastAPI, Form, HTTPException, UploadFile
+from fastapi import FastAPI, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -63,12 +66,46 @@ def _receipt(r: dict) -> dict:
             "confidence": r["confidence"], "created_at": r.get("created_at")}
 
 
+CURRENT_OWNER: ContextVar[str] = ContextVar("owner", default="local")
+VISITOR_ID = re.compile(r"[A-Za-z0-9-]{16,64}")
+
+
 def create_app(memory: Memory, transport_factory: Callable[[], Transport],
                detector=None, history_turns: int = 30,
                stt: Callable[[bytes], dict] | None = None,
-               tts: Callable[[str], bytes] | None = None) -> FastAPI:
+               tts: Callable[[str], bytes] | None = None,
+               daily_limit: int | None = None) -> FastAPI:
     app = FastAPI(title="PinkFlag", docs_url="/api/docs")
     detector = detector or load_detector()
+    usage: dict[tuple[str, str], int] = {}  # (visitor, day) -> messages sent to Sisi
+
+    @app.middleware("http")
+    async def visitor(request: Request, call_next):
+        """Each browser sends a random anonymous ID; every guy and chat belongs to one ID,
+        so visitors never see each other's data. Locally (no ID) everything is 'local'."""
+        # header for API calls; ?u= for <img> tags, which can't send headers
+        raw = request.headers.get("x-pinkflag-user") or request.query_params.get("u", "")
+        owner = raw if VISITOR_ID.fullmatch(raw) else "local"
+        token = CURRENT_OWNER.set(owner)
+        try:
+            # fair-use limit on everything that costs a Gemini / Whisper call
+            if daily_limit and request.method == "POST" and request.url.path.endswith(
+                    ("/chat", "/voice", "/screenshot", "/transcribe")):
+                key = (owner, time.strftime("%Y-%m-%d"))
+                if usage.get(key, 0) >= daily_limit:
+                    return JSONResponse(status_code=429, content={
+                        "reply": f"we've talked a lot today bestie 💕 you've used your {daily_limit} "
+                                 "messages for today. come back tomorrow!",
+                        "receipts": [], "detail": "daily limit reached"})
+                usage[key] = usage.get(key, 0) + 1
+            return await call_next(request)
+        finally:
+            CURRENT_OWNER.reset(token)
+
+    @app.delete("/api/me", status_code=200)
+    def delete_my_data():
+        """Privacy: wipe every guy, chat, note and screenshot of this visitor."""
+        return {"deleted_guys": memory.delete_owner(CURRENT_OWNER.get())}
 
     def _stt(audio: bytes) -> dict:
         if stt:
@@ -83,7 +120,7 @@ def create_app(memory: Memory, transport_factory: Callable[[], Transport],
         return synthesize(text)
 
     def get_guy(guy_id: int) -> dict:
-        guy = memory.guy(guy_id)
+        guy = memory.guy(guy_id, owner=CURRENT_OWNER.get())  # other visitors' guys = not found
         if guy is None:
             raise HTTPException(404, "guy not found")
         return guy
@@ -93,11 +130,12 @@ def create_app(memory: Memory, transport_factory: Callable[[], Transport],
 
     @app.get("/api/guys")
     def list_guys():
-        return [with_summary(g) for g in memory.guys()]
+        return [with_summary(g) for g in memory.guys(CURRENT_OWNER.get())]
 
     @app.post("/api/guys", status_code=201)
     def add_guy(body: NewGuy):
-        return with_summary(get_guy(memory.add_guy(body.name, body.status, body.emoji)))
+        gid = memory.add_guy(body.name, body.status, body.emoji, owner=CURRENT_OWNER.get())
+        return with_summary(get_guy(gid))
 
     @app.patch("/api/guys/{guy_id}")
     def update_guy(guy_id: int, body: GuyUpdate):
@@ -117,6 +155,7 @@ def create_app(memory: Memory, transport_factory: Callable[[], Transport],
 
     @app.get("/api/guys/{guy_id}/images/{message_id}")
     def message_image(guy_id: int, message_id: int):
+        get_guy(guy_id)
         data = memory.message_image(f"guy-{guy_id}", message_id)
         if not data:
             raise HTTPException(404, "Screenshot unavailable")
@@ -210,7 +249,8 @@ def create_app(memory: Memory, transport_factory: Callable[[], Transport],
 
     @app.get("/api/roster/best")
     def best():
-        scored = [g for g in (with_summary(g) for g in memory.guys()) if g["score"] is not None]
+        scored = [g for g in (with_summary(g) for g in memory.guys(CURRENT_OWNER.get()))
+                  if g["score"] is not None]
         if not scored:
             raise HTTPException(404, "no receipts yet: tell Sisi what they said first")
         return min(scored, key=lambda g: g["score"])
