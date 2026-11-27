@@ -29,6 +29,13 @@ def main(argv=None) -> None:
     args = parser.parse_args(argv)
     cfg = yaml.safe_load(Path(args.config).read_text(encoding="utf-8"))
 
+    # hosted: the trained detector isn't in git, download it from the Hugging Face Hub
+    repo = os.environ.get("PINKFLAG_MODEL_REPO")
+    if repo and not Path("models/baseline_strong.joblib").exists():
+        from huggingface_hub import hf_hub_download
+        hf_hub_download(repo, "baseline_strong.joblib", local_dir="models")
+        print(f"📦 detector downloaded from {repo}", flush=True)
+
     key = get_key("GEMINI_API_KEY")
     app = create_app(Memory(cfg["memory_path"]), lambda: gemini_transport(key, cfg["models"]),
                      history_turns=cfg["history_turns"], daily_limit=args.daily_limit)

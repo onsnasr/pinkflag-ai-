@@ -36,7 +36,9 @@ VOICE = "Aoede"  # warm, breezy female voice
 STYLE = "Read this warmly and confidently, like a friendly tech presenter, at a natural pace: "
 
 SCENES = [
-    ("hook", "Is he husband material, or a walking red flag? Meet PinkFlag: your AI big sister for safer dating."),
+    ("hook", "A fine-tuned multilingual transformer. A BiLSTM trained from scratch. An LLM agent with tools "
+             "and memory, and speech models running on a laptop GPU. All built to answer one question: "
+             "is he husband material, or a walking red flag? Meet PinkFlag."),
     ("chat", ("Paste what he said, and Sisi, our AI agent, gets you the receipts. A classifier we trained "
              "detects the manipulation pattern, and Sisi explains it like a big sister would.")),
     ("receipts", ("Every guy gets his own case file: a vibe meter, a timeline of flags, and a profile Sisi "
@@ -116,6 +118,9 @@ CAPTION_JS = """(text) => {
   c.textContent = text;
 }"""
 
+BOTTOM_JS = """() => { const c = document.getElementById('demo-caption');
+  c.style.top = 'auto'; c.style.bottom = '36px'; }"""
+
 RESULTS_HTML = """<!doctype html><html><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>body{margin:0;height:100vh;display:grid;place-items:center;background:#FFF5F8;font-family:Inter,sans-serif;color:#2B1A22}
@@ -156,6 +161,8 @@ def record(durations: dict[str, float]) -> tuple[Path, dict[str, float]]:
         page = ctx.new_page()
         page.goto(URL)
         page.wait_for_selector("#tabs button")
+        if page.locator("#privacy.open").count():  # first-visit privacy notice
+            page.click("#privacyOk")
 
         def scene(name: str, actions) -> None:
             starts[name] = time.monotonic() - t0
@@ -202,10 +209,12 @@ def record(durations: dict[str, float]) -> tuple[Path, dict[str, float]]:
             page.click("#hang")
             page.goto((OUT / "results.html").as_uri())
             page.evaluate(CAPTION_JS, dict(SCENES)["ml"])
+            page.evaluate(BOTTOM_JS)  # slides have their title at the top: caption goes below
 
         def end():
             page.goto((OUT / "end.html").as_uri())
             page.evaluate(CAPTION_JS, dict(SCENES)["end"])
+            page.evaluate(BOTTOM_JS)
 
         for name, fn in [("hook", hook), ("chat", chat), ("receipts", receipts), ("roster", roster),
                          ("call", call), ("ml", ml), ("end", end)]:

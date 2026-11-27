@@ -1,0 +1,18 @@
+# Lightweight PinkFlag for free hosting (Render free plan, 512 MB): chat, receipts, roster,
+# screenshots. Voice calls need Whisper + Piper (more memory), so they stay a local feature.
+FROM python:3.12-slim
+WORKDIR /app
+
+COPY pyproject.toml README.md ./
+COPY src ./src
+# same scikit-learn as the published model, so the joblib file loads exactly
+RUN pip install --no-cache-dir -e . huggingface_hub "scikit-learn==1.9.1"
+
+COPY configs ./configs
+COPY web ./web
+RUN mkdir -p data models
+
+ENV HOST=0.0.0.0 PORT=10000 PINKFLAG_DAILY_LIMIT=40 PINKFLAG_MODEL_REPO=onsn/pinkflag-detector
+EXPOSE 10000
+# GEMINI_API_KEY is set in the Render dashboard (Environment), never in the image
+CMD ["python", "-m", "pinkflag.app"]

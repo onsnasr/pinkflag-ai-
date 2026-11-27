@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: pinkflag
+    runtime: docker
+    dockerfilePath: ./Dockerfile.render
+    plan: free
+    healthCheckPath: /api/guys
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false   # you paste it in the Render dashboard
