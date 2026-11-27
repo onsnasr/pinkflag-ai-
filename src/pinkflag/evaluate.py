@@ -42,6 +42,12 @@ def bootstrap(y, p, n: int = 2000, seed: int = 0) -> dict:
                 "high": float(np.percentile([s[k] for s in samples], 97.5))} for k in point}
 
 
+def fmt(m: dict, pct: bool = True) -> str:
+    if pct:
+        return f"{m['value']:.0%} ({m['low']:.0%}-{m['high']:.0%})"
+    return f"{m['value']:.2f} ({m['low']:.2f}-{m['high']:.2f})"
+
+
 def predictor(kind: str, path: str):
     if kind == "baseline":
         model = joblib.load(path)
@@ -67,9 +73,8 @@ def main() -> None:
             continue
         r = bootstrap(clean.label, predictor(kind, path)(clean.text.values))
         results[name] = r
-        cell = lambda m, pct=True: (f"{r[m]['value']:.0%} ({r[m]['low']:.0%}-{r[m]['high']:.0%})" if pct
-                                    else f"{r[m]['value']:.2f} ({r[m]['low']:.2f}-{r[m]['high']:.2f})")
-        lines.append(f"| {name} | {cell('accuracy')} | {cell('macro_f1', False)} | {cell('red_flag_acc')} |")
+        lines.append(f"| {name} | {fmt(r['accuracy'])} | {fmt(r['macro_f1'], False)} | "
+                     f"{fmt(r['red_flag_acc'])} |")
     out = Path("reports")
     out.mkdir(exist_ok=True)
     (out / "results.md").write_text("\n".join(lines) + "\n", encoding="utf-8")

@@ -26,8 +26,8 @@ DEMO = [
                       "you looked so good today fr"],
      "notes": ["5 months of talking, no real date yet", "disappears for weeks then texts 'wyd'"],
      "chat": [("user", "youssef texted me 'heyyy stranger' after 3 weeks of nothing 🙄"),
-              ("model", "the 3-week ghost then 'heyyy stranger' combo 😮‍💨 that's breadcrumbing, babe. "
-                        "he gives you just enough attention to keep you around. what do YOU want from this?")]},
+              ("model", ("the 3-week ghost then 'heyyy stranger' combo 😮‍💨 that's breadcrumbing, babe. "
+                        "he gives you just enough attention to keep you around. what do YOU want from this?"))]},
     {"name": "Karim", "emoji": "📚", "status": "talking stage",
      "profile": {"works_or_studies": "med student, 5th year", "met_at": "the library",
                  "age": "25", "detail": "always texts good morning"},
@@ -37,8 +37,8 @@ DEMO = [
                       "i'm proud of you for finishing that project"],
      "notes": ["3 weeks of talking", "consistent, plans dates ahead"],
      "chat": [("user", "karim booked the restaurant i mentioned like a week ago 🥹"),
-              ("model", "he LISTENED and he PLANNED?? 💚 that's green flag energy, bestie. "
-                        "consistency is the most attractive thing a man can do.")]},
+              ("model", ("he LISTENED and he PLANNED?? 💚 that's green flag energy, bestie. "
+                        "consistency is the most attractive thing a man can do."))]},
     {"name": "Mehdi", "emoji": "🧢", "status": "ex",
      "profile": {"works_or_studies": "works in sales", "met_at": "at work", "age": "27",
                  "detail": "still texts at 2am"},
@@ -47,8 +47,8 @@ DEMO = [
                       "if you really loved me you would come back"],
      "notes": ["broke up 2 months ago", "she blocked him once already"],
      "chat": [("user", "mehdi texted 'you'll regret this, trust me' 😰"),
-              ("model", "okay, I'm being serious now. that's a threat, not a feeling. you did nothing wrong. "
-                        "save the screenshots, tell someone you trust, and you never have to answer him.")]},
+              ("model", ("okay, I'm being serious now. that's a threat, not a feeling. you did nothing wrong. "
+                        "save the screenshots, tell someone you trust, and you never have to answer him."))]},
 ]
 
 
