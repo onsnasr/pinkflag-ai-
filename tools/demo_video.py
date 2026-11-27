@@ -37,16 +37,16 @@ STYLE = "Read this warmly and confidently, like a friendly tech presenter, at a 
 
 SCENES = [
     ("hook", "Is he husband material, or a walking red flag? Meet PinkFlag: your AI big sister for safer dating."),
-    ("chat", "Paste what he said, and Sisi, our AI agent, gets you the receipts. A classifier we trained "
-             "detects the manipulation pattern, and Sisi explains it like a big sister would."),
-    ("receipts", "Every guy gets his own case file: a vibe meter, a timeline of flags, and a profile Sisi "
-                 "fills in as you talk, so you never mix them up."),
-    ("roster", "Talking to more than one? The roster compares them side by side, and the wheel always "
-               "lands on the one who treats you best."),
+    ("chat", ("Paste what he said, and Sisi, our AI agent, gets you the receipts. A classifier we trained "
+             "detects the manipulation pattern, and Sisi explains it like a big sister would.")),
+    ("receipts", ("Every guy gets his own case file: a vibe meter, a timeline of flags, and a profile Sisi "
+                 "fills in as you talk, so you never mix them up.")),
+    ("roster", ("Talking to more than one? The roster compares them side by side, and the wheel always "
+               "lands on the one who treats you best.")),
     ("call", "You can even call her. Speech recognition and her voice run locally, on the GPU."),
-    ("ml", "Under the hood: four data sources, a leak-free split, and three model families. TF-IDF, a "
+    ("ml", ("Under the hood: four data sources, a leak-free split, and three model families. TF-IDF, a "
            "BiLSTM trained from scratch, and a fine-tuned multilingual transformer, compared with "
-           "confidence intervals."),
+           "confidence intervals.")),
     ("end", "PinkFlag. Because every girl deserves someone in her corner."),
 ]
 
