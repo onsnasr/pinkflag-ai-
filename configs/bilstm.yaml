@@ -1,0 +1,23 @@
+# BiLSTM trained from scratch on the same trusted labels as baseline_strong / transformer_strong
+seed: 42
+data:
+  train: data/processed/train.csv
+  val: data/processed/val.csv
+  test: data/processed/test.csv
+  exclude_label_quality: [dataset_loose, dataset_not_manipulative, translated_unreviewed, dataset_llm_conflict, dataset_llm_agree]
+vocab_min_freq: 1
+max_len: 128
+model:
+  emb: 128
+  hidden: 128
+  layers: 2
+  dropout: 0.4
+train:
+  epochs: 40
+  batch_size: 32
+  lr: 2.0e-3
+  weight_decay: 1.0e-4
+  early_stopping_patience: 6
+output:
+  model_dir: models/bilstm
+  report_path: reports/bilstm_metrics.json

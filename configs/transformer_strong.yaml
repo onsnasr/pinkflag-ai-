@@ -11,7 +11,7 @@ data:
   train: data/processed/train.csv
   val: data/processed/val.csv
   test: data/processed/test.csv
-  exclude_label_quality: [dataset_loose, dataset_not_manipulative, translated_unreviewed, dataset_llm_conflict]
+  exclude_label_quality: [dataset_loose, dataset_not_manipulative, translated_unreviewed, dataset_llm_conflict, dataset_llm_agree]
 
 model_name: xlm-roberta-base   # multilingual: English, Arabic, French... (100 languages)
 max_length: 192                # tokens; MentalManip dialogues are long, texts are short
@@ -32,5 +32,6 @@ train:
 output:
   model_dir: models/transformer_strong
   report_path: reports/transformer_strong_metrics.json
+
 
 

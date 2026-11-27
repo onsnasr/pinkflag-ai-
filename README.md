@@ -130,6 +130,22 @@ baseline). With only ~550 clean examples, the simpler model wins; the transforme
 to pull ahead. The clean test set is small (103 rows), so differences of a few points are within noise.
 Sisi now uses the best model.
 
+### v0.5: three model families, one honest comparison
+Same trusted training data (591 rows), same clean test set (n = 114), **95% bootstrap confidence intervals**
+(`python -m pinkflag.evaluate`):
+
+| Model | Accuracy | Macro-F1 | Red flag vs green |
+|---|---|---|---|
+| TF-IDF + LogReg (classical ML) | 61% (52-69) | 0.56 (0.43-0.67) | 97% (94-100) |
+| BiLSTM from scratch (deep learning) | 39% (30-47) | 0.35 (0.26-0.42) | 93% (89-97) |
+| **XLM-RoBERTa fine-tuned (transfer learning)** | **63% (54-72)** | **0.58 (0.46-0.67)** | 94% (89-97) |
+
+- With ~600 examples, deep learning **from scratch** can't learn language (BiLSTM clearly worst).
+  **Pre-training** fixes that: XLM-RoBERTa is the top model, though its interval overlaps the baseline's.
+- A second annotator (Gemini) agreed with our loose dataset mappings only **33% (Cohen's κ = 0.15)**,
+  quantifying the label noise found in error analysis; adding the agreed rows did not help (ablation).
+- Full details, limitations and ethics: [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md).
+
 > ⚠️ **Read this before you get excited:** every message here was written by us, so these scores measure how well the model copies *our* writing style, not how well it works on real texts. A real-world test set is on the roadmap.
 
 ## 🛣️ roadmap
