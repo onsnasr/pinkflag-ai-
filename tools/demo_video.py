@@ -50,8 +50,8 @@ SCENES = [
     ("roster", ("Talking to more than one? The roster compares them side by side, and the wheel always "
                 "lands on the one who treats you best.")),
     ("ml", ("Under the hood: four data sources, a leak-free split, and three model families, compared "
-            "with confidence intervals. Clean labels beat a bigger model.")),
-    ("end", "PinkFlag. Because every girl deserves someone in her corner."),
+            "with confidence intervals. And every push runs unit, end-to-end and security scans.")),
+    ("end", "PinkFlag is live, and free. Because every girl deserves someone in her corner."),
 ]
 
 
@@ -162,16 +162,18 @@ body{margin:0;width:390px;background:#fff;font:16px -apple-system,Segoe UI,sans-
 
 RESULTS_HTML = """<!doctype html><html><head><meta charset="utf-8">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Inter:wght@400;600&display=swap" rel="stylesheet">
-<style>body{margin:0;height:100vh;display:grid;place-items:center;background:#FFF5F8;font-family:Inter,sans-serif;color:#2B1A22}
+<style>body{margin:0;height:100vh;display:grid;place-items:start center;padding-top:28px;box-sizing:border-box;background:#FFF5F8;font-family:Inter,sans-serif;color:#2B1A22}
 .card{width:1060px}h1{font-family:Fraunces,serif;color:#5A2340;font-size:44px;margin:0 0 6px}
-.sub{color:#8E3B5E;font-size:20px;margin:0 0 22px}.flow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px}
+.sub{color:#8E3B5E;font-size:20px;margin:0 0 22px}.flow{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
 .flow span{background:#fff;border:1px solid #F2D9E2;border-radius:999px;padding:8px 14px;font-weight:600;color:#5A2340}
 table{width:100%;border-collapse:collapse;background:#fff;font-size:19px}
-th{background:#8E3B5E;color:#fff;text-align:left;padding:12px 16px}td{padding:12px 16px;border-top:1px solid #F2D9E2}
+th{background:#8E3B5E;color:#fff;text-align:left;padding:12px 16px}td{padding:9px 16px;border-top:1px solid #F2D9E2}
 tr.best td{background:#FBEFF3;font-weight:600}</style></head><body><div class="card">
 <h1>Under the hood</h1><p class="sub">Same trusted training data · same clean test set · 95% bootstrap CI</p>
 <div class="flow"><span>scraping + MentalManip + seed + Derja</span><span>label-noise audit (κ = 0.15)</span>
 <span>leak-free group split</span><span>3 model families</span><span>agent + memory + vision + voice</span></div>
+<div class="flow"><span>✅ pytest</span><span>✅ Playwright e2e</span><span>✅ Bandit + CodeQL (SAST)</span>
+<span>✅ pip-audit (SCA)</span><span>✅ OWASP ZAP (DAST)</span><span>✅ Gitleaks</span></div>
 <table><tr><th>Model</th><th>Accuracy</th><th>Macro-F1</th><th>Red flag vs green</th></tr>
 <tr><td>TF-IDF + Logistic Regression</td><td>61% (52-69)</td><td>0.56</td><td>97%</td></tr>
 <tr><td>BiLSTM from scratch (PyTorch)</td><td>39% (30-47)</td><td>0.35</td><td>93%</td></tr>
@@ -183,8 +185,11 @@ END_HTML = """<!doctype html><html><head><meta charset="utf-8">
 <style>body{margin:0;height:100vh;display:grid;place-items:center;text-align:center;font-family:Inter,sans-serif;
 background:radial-gradient(circle at 50% 40%,#8E3B5E,#5A2340 70%);color:#fff}h1{font-family:Fraunces,serif;font-size:72px;margin:0}
 p{font-size:24px;opacity:.9}code{display:block;margin:8px auto;width:max-content;background:rgba(255,255,255,.15);
-padding:6px 14px;border-radius:10px;font-size:19px}</style></head><body><div><h1>PinkFlag</h1>
-<p>your AI big sister for safer dating</p><code>github.com/onsnasr/pinkflag-ai-</code>
+padding:6px 14px;border-radius:10px;font-size:19px}
+.live{display:inline-block;margin:6px 0 18px;background:#fff;color:#8E3B5E;font-weight:600;font-size:28px;
+padding:12px 26px;border-radius:999px;box-shadow:0 8px 30px rgba(0,0,0,.25)}</style></head><body><div><h1>PinkFlag</h1>
+<p>your AI big sister for safer dating</p>
+<div class="live">try it live 👉 pinkflag-0lwy.onrender.com</div><code>github.com/onsnasr/pinkflag-ai-</code>
 <code>huggingface.co/onsn/pinkflag-detector</code></div></body></html>"""
 
 
@@ -205,7 +210,8 @@ def record(narr: dict[str, float], user_wav: Path) -> tuple[Path, list[tuple[flo
         shot_page.screenshot(path=str(OUT / "chat_screenshot.png"))
         shot_page.close()
 
-        ctx = browser.new_context(viewport={"width": 1280, "height": 720}, permissions=["microphone"],
+        ctx = browser.new_context(bypass_csp=True,  # the recorder injects helper scripts
+                                  viewport={"width": 1280, "height": 720}, permissions=["microphone"],
                                   record_video_dir=str(OUT), record_video_size={"width": 1280, "height": 720})
         ctx.add_init_script(f"localStorage.setItem('pinkflag-visitor', '{DEMO_VISITOR}');"
                             "localStorage.setItem('pinkflag-privacy-ok', '1');")
@@ -318,6 +324,25 @@ def record(narr: dict[str, float], user_wav: Path) -> tuple[Path, list[tuple[flo
 
 
 # ---------- edit ----------
+def dead_air(ffmpeg: str, video: Path, longest: float = 1.6, keep: float = 0.5,
+             tail: float = 2.5) -> list[tuple[float, float]]:
+    """Silent stretches (Sisi thinking, waiting for Gemini) to cut, keeping a short breath
+    on each side and a few seconds of the end card."""
+    log = subprocess.run([ffmpeg, "-i", str(video), "-af", f"silencedetect=n=-40dB:d={longest}",
+                          "-f", "null", "-"], check=False, capture_output=True, text=True).stderr
+    starts = [float(x.split("silence_start:")[1]) for x in log.splitlines() if "silence_start:" in x]
+    ends = [float(x.split("silence_end:")[1].split("|")[0]) for x in log.splitlines() if "silence_end:" in x]
+    cuts = []
+    for i, s in enumerate(starts):
+        if s < 0.5:  # the opening hook starts silent on purpose
+            continue
+        if i < len(ends):
+            cuts.append((s + keep, ends[i] - keep))
+        else:  # silence until the end: keep a little of the end card
+            cuts.append((s + tail, 1e9))
+    return [(s, e) for s, e in cuts if e > s]
+
+
 def assemble(video: Path, sounds: list[tuple[float, Path]], out: Path) -> None:
     import imageio_ffmpeg
     ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
@@ -332,8 +357,13 @@ def assemble(video: Path, sounds: list[tuple[float, Path]], out: Path) -> None:
                     "-map", "[aout]", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20", "-c:a", "aac",
                     "-b:a", "160k", "-shortest", str(out)], check=True, capture_output=True)
     fast = out.with_name(out.stem + "_fast.mp4")
+    gaps = dead_air(ffmpeg, out)
+    drop = "+".join(f"between(t,{s:.2f},{e:.2f})" for s, e in gaps) or "0"
+    print(f"   cut {sum(e - s for s, e in gaps):.1f}s of waiting", flush=True)
     subprocess.run([ffmpeg, "-y", "-i", str(out), "-filter_complex",
-                    "[0:v]setpts=PTS/1.2[v];[0:a]atempo=1.2[a]", "-map", "[v]", "-map", "[a]",
+                    (f"[0:v]select='not({drop})',setpts=N/FRAME_RATE/TB,setpts=PTS/1.1[v];"
+                    f"[0:a]aselect='not({drop})',asetpts=N/SR/TB,atempo=1.1[a]"),
+                    "-map", "[v]", "-map", "[a]",
                     "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20", "-c:a", "aac", "-b:a", "160k",
                     str(fast)], check=True, capture_output=True)
 
