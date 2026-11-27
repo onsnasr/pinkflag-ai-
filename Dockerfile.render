@@ -6,7 +6,7 @@ WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY src ./src
 # same scikit-learn as the published model, so the joblib file loads exactly
-RUN pip install --no-cache-dir -e . huggingface_hub "scikit-learn==1.9.1"
+RUN pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -e . huggingface_hub "scikit-learn==1.9.1"
 
 COPY configs ./configs
 COPY web ./web

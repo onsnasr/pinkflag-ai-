@@ -48,6 +48,7 @@ jobs:
       - name: Audit the hosted app's dependencies for known CVEs
         run: |
           python -m venv /tmp/app
+          /tmp/app/bin/pip install -q --upgrade pip
           /tmp/app/bin/pip install -q . huggingface_hub "scikit-learn==1.9.1" pip-audit
           /tmp/app/bin/pip-audit --skip-editable
 
@@ -90,3 +91,9 @@ jobs:
           rules_file_name: .zap/rules.tsv
           allow_issue_writing: false
           fail_action: true
+      - name: Publish ZAP findings
+        if: always()
+        run: |
+          [ -f report_json.json ] || exit 0
+          jq -r '.site[].alerts[] | "::warning title=ZAP \(.pluginid) (\(.riskdesc))::\(.alert) on \(.instances[0].uri)"' report_json.json
+          [ -f report_md.md ] && cat report_md.md >> "$GITHUB_STEP_SUMMARY" || true
