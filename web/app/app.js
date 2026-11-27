@@ -17,6 +17,15 @@ const escapeHtml = (s) => String(s ?? "").replace(/[&<>"']/g, (c) =>
 // escape first, then allow **bold** from Sisi's replies
 const formatReply = (s) => escapeHtml(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
 
+// ---------- hosted free version: no voice, hide those buttons ----------
+fetch("/api/config").then((r) => r.json()).then((cfg) => {
+  if (cfg.voice) return;
+  for (const id of ["callBtn", "mic"]) document.getElementById(id)?.remove();
+  const tag = document.querySelector(".who p");
+  if (tag) tag.insertAdjacentHTML("beforeend",
+    '<br><small>📞 voice calls run locally on GPU: see the demo video</small>');
+}).catch(() => {});
+
 // ---------- privacy notice (first visit) + "delete all my data" ----------
 document.addEventListener("DOMContentLoaded", () => {
   const seen = (() => { try { return localStorage.getItem("pinkflag-privacy-ok"); } catch { return null; } })();

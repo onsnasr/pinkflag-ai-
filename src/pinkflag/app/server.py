@@ -13,6 +13,7 @@
 Everything stays on this computer: one SQLite file (data/agent/sisi.db).
 """
 import base64
+import os
 import re
 import time
 from collections.abc import Callable
@@ -101,6 +102,11 @@ def create_app(memory: Memory, transport_factory: Callable[[], Transport],
             return await call_next(request)
         finally:
             CURRENT_OWNER.reset(token)
+
+    @app.get("/api/config")
+    def config():
+        """Hosted free version: voice (Whisper + Piper) is off, the UI hides those buttons."""
+        return {"voice": os.environ.get("PINKFLAG_VOICE", "1") != "0"}
 
     @app.delete("/api/me", status_code=200)
     def delete_my_data():
