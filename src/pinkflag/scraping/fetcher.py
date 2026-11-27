@@ -59,7 +59,7 @@ class PoliteFetcher:
 
     # ---- rule 3: cache ------------------------------------------------------
     def _cache_path(self, url: str) -> Path:
-        return self.cache_dir / (hashlib.sha1(url.encode()).hexdigest() + ".txt")
+        return self.cache_dir / (hashlib.sha1(url.encode(), usedforsecurity=False).hexdigest() + ".txt")
 
     def get(self, url: str) -> str | None:
         """Return the page text, or None if not allowed / failed."""

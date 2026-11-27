@@ -14,6 +14,9 @@ from pinkflag.agent.sisi import gemini_transport
 from pinkflag.app.server import create_app
 from pinkflag.env import get_key
 
+# the published detector commit on the Hugging Face Hub (onsn/pinkflag-detector)
+MODEL_REVISION = "c6baba905257a99ace3b3c2e91491f9550b0dc77"
+
 
 def main(argv=None) -> None:
     import sys
@@ -33,7 +36,9 @@ def main(argv=None) -> None:
     repo = os.environ.get("PINKFLAG_MODEL_REPO")
     if repo and not Path("models/baseline_strong.joblib").exists():
         from huggingface_hub import hf_hub_download
-        hf_hub_download(repo, "baseline_strong.joblib", local_dir="models")
+        # pinned to one reviewed commit: joblib files are pickles, never load an unpinned one
+        revision = os.environ.get("PINKFLAG_MODEL_REVISION", MODEL_REVISION)
+        hf_hub_download(repo, "baseline_strong.joblib", revision=revision, local_dir="models")
         print(f"📦 detector downloaded from {repo}", flush=True)
 
     key = get_key("GEMINI_API_KEY")

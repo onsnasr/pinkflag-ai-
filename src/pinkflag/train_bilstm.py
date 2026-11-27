@@ -156,7 +156,7 @@ def main(argv=None) -> None:
     plot_history([{**h, "type_accuracy": 0} for h in history],
                  Path(cfg["output"]["report_path"]).with_suffix(".png"))
 
-    model.load_state_dict(torch.load(out_dir / "model.pt", map_location=device))
+    model.load_state_dict(torch.load(out_dir / "model.pt", map_location=device, weights_only=True))
     test = test.assign(pred=np.array(LABEL_LIST)[predict_ids(model, test, vocab, cfg["max_len"], device)])
     clean = test[test.label_quality.isin(CLEAN_QUALITY)]
     metrics = {"history": history, "test": score(test.label, test.pred.values),
@@ -176,7 +176,7 @@ def load_bilstm(model_dir: str | Path = "models/bilstm"):
     vocab = Vocab([])
     vocab.itos, vocab.stoi = itos, {w: i for i, w in enumerate(itos)}
     model = BiLSTMClassifier(len(itos), len(LABEL_LIST), **conf)
-    model.load_state_dict(torch.load(model_dir / "model.pt", map_location="cpu"))
+    model.load_state_dict(torch.load(model_dir / "model.pt", map_location="cpu", weights_only=True))
     df_label = LABEL_LIST[0]
 
     def predict(texts):

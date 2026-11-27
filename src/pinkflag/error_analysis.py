@@ -31,8 +31,8 @@ def predict_transformer(texts, path="models/transformer"):
     from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    tok = AutoTokenizer.from_pretrained(path)
-    model = AutoModelForSequenceClassification.from_pretrained(path).to(device).eval()
+    tok = AutoTokenizer.from_pretrained(path)  # nosec B615 - local folder
+    model = AutoModelForSequenceClassification.from_pretrained(path).to(device)  # nosec B615.eval()
     preds = []
     with torch.no_grad():
         for i in range(0, len(texts), 32):

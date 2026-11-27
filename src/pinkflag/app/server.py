@@ -69,6 +69,19 @@ def _receipt(r: dict) -> dict:
 
 CURRENT_OWNER: ContextVar[str] = ContextVar("owner", default="local")
 VISITOR_ID = re.compile(r"[A-Za-z0-9-]{16,64}")
+SECURITY_HEADERS = {
+    "Content-Security-Policy": (
+        "default-src 'self'; script-src 'self'; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src https://fonts.gstatic.com; img-src 'self' blob: data:; media-src 'self' blob: data:; "
+        "connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; "
+        "frame-ancestors 'none'"),
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "no-referrer",
+    "Permissions-Policy": "microphone=(self), camera=(), geolocation=()",
+    "Cross-Origin-Opener-Policy": "same-origin",
+}
 
 
 def create_app(memory: Memory, transport_factory: Callable[[], Transport],
@@ -79,6 +92,15 @@ def create_app(memory: Memory, transport_factory: Callable[[], Transport],
     app = FastAPI(title="PinkFlag", docs_url="/api/docs")
     detector = detector or load_detector()
     usage: dict[tuple[str, str], int] = {}  # (visitor, day) -> messages sent to Sisi
+
+    @app.middleware("http")
+    async def security_headers(request: Request, call_next):
+        """Browser hardening on every response (found by the OWASP ZAP scan in CI)."""
+        response = await call_next(request)
+        response.headers.update(SECURITY_HEADERS)
+        if request.url.path.startswith("/api/"):
+            response.headers.setdefault("Cache-Control", "no-store")
+        return response
 
     @app.middleware("http")
     async def visitor(request: Request, call_next):

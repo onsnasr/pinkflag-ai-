@@ -4,11 +4,14 @@
 
 ### your AI big sister for safer dating 🚩💅
 
-**Get the receipts 💅 End-to-end NLP system: web scraping → multi-dataset training → fine-tuned DeBERTa → LLM agent that explains manipulation patterns**
+**Get the receipts 💅 End-to-end NLP system: web scraping → multi-dataset training → TF-IDF / BiLSTM / fine-tuned XLM-RoBERTa → LLM agent with memory that explains manipulation patterns**
 
-*paste a message (or soon, a screenshot of the whole convo) → PinkFlag tells you if it's giving 💚 green flag or 🚩 red flag, what kind, and why*
+### 👉 [try it live: pinkflag-0lwy.onrender.com](https://pinkflag-0lwy.onrender.com) · [model on 🤗 Hub](https://huggingface.co/onsn/pinkflag-detector)
 
-![status](https://img.shields.io/badge/status-v0.1%20baseline-ff69b4)
+*paste a message (or a screenshot of the whole convo) → PinkFlag tells you if it's giving 💚 green flag or 🚩 red flag, what kind, and why*
+
+[![ci](https://github.com/onsnasr/pinkflag-ai-/actions/workflows/ci.yml/badge.svg)](https://github.com/onsnasr/pinkflag-ai-/actions/workflows/ci.yml)
+[![security](https://github.com/onsnasr/pinkflag-ai-/actions/workflows/security.yml/badge.svg)](https://github.com/onsnasr/pinkflag-ai-/actions/workflows/security.yml)
 ![python](https://img.shields.io/badge/python-3.10%2B-ffb6c1)
 ![license](https://img.shields.io/badge/license-MIT-ffc0cb)
 
@@ -147,6 +150,20 @@ Same trusted training data (591 rows), same clean test set (n = 114), **95% boot
 - Full details, limitations and ethics: [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md).
 
 > ⚠️ **Read this before you get excited:** every message here was written by us, so these scores measure how well the model copies *our* writing style, not how well it works on real texts. A real-world test set is on the roadmap.
+
+## 🧪 testing & security pipeline
+
+Every push runs two GitHub Actions workflows:
+
+| layer | tool | what it checks |
+|---|---|---|
+| lint | ruff | style, bugs, unsafe patterns |
+| unit + API | pytest (+ coverage) | models, data pipeline, agent loop with a fake Gemini, privacy between visitors, daily limit, security headers |
+| end-to-end | Playwright | a real browser adds a guy, chats with Sisi, sees the receipts, deletes him, and fails on any CSP violation |
+| SAST | Bandit + CodeQL | insecure Python and JavaScript (SQL built from strings, unpinned pickle downloads, unsafe `torch.load`...) |
+| SCA | pip-audit + dependency review | known CVEs in every dependency of the hosted app, weekly too |
+| secrets | Gitleaks | API keys that slipped into git history |
+| DAST | OWASP ZAP baseline | attacks the exact Docker image that runs on Render |
 
 ## 🛣️ roadmap
 

@@ -52,3 +52,10 @@ def test_bad_visitor_id_falls_back_to_local():
     c = client()
     c.post("/api/guys", json={"name": "X"}, headers={"X-PinkFlag-User": "../../etc"})
     assert len(c.get("/api/guys").json()) == 1  # treated as 'local', no injection
+
+
+def test_security_headers():
+    r = client().get("/api/guys")
+    assert "frame-ancestors 'none'" in r.headers["content-security-policy"]
+    assert r.headers["x-content-type-options"] == "nosniff"
+    assert r.headers["cache-control"] == "no-store"

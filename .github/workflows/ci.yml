@@ -5,8 +5,12 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  test:
+  unit:
+    name: lint + unit tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,10 +19,26 @@ jobs:
           python-version: "3.12"
           cache: pip
       - name: Install
-        run: pip install -e ".[dev]"
+        run: pip install -e ".[dev]" pytest-cov
       - name: Lint
         run: ruff check .
-      - name: Test
-        run: pytest -q
+      - name: Unit + API tests
+        run: pytest -q --ignore=tests/e2e --cov=pinkflag --cov-report=term-missing:skip-covered
       - name: Train baseline (sanity check that the pipeline runs end to end)
         run: python -m pinkflag.train --config configs/baseline.yaml
+
+  e2e:
+    name: end-to-end (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: |
+          pip install -e ".[dev]" playwright
+          python -m playwright install --with-deps chromium
+      - name: Browser tests (real UI, fake Gemini)
+        run: pytest -q tests/e2e

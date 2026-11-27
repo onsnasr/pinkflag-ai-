@@ -142,8 +142,8 @@ def main(argv=None) -> None:
     train = drop_quality(train, excluded)
     val = drop_quality(val, excluded)  # the "mock exam" must use the same trusted answer key
     print(f"📚 training rows: {len(train)} · validation rows: {len(val)}")
-    tokenizer = AutoTokenizer.from_pretrained(cfg["model_name"])
-    model = AutoModelForSequenceClassification.from_pretrained(
+    tokenizer = AutoTokenizer.from_pretrained(cfg["model_name"])  # nosec B615 - official base model
+    model = AutoModelForSequenceClassification.from_pretrained(  # nosec B615
         cfg["model_name"], num_labels=len(LABEL_LIST),
         id2label=dict(enumerate(LABEL_LIST)), label2id=LABEL2ID).to(device)
 
@@ -229,7 +229,7 @@ def main(argv=None) -> None:
     plot_history(history, Path(cfg["output"]["report_path"]).with_suffix(".png"))
 
     # reload the best epoch and evaluate once on the test set
-    model = AutoModelForSequenceClassification.from_pretrained(out_dir).to(device)
+    model = AutoModelForSequenceClassification.from_pretrained(out_dir).to(device)  # nosec B615 - local folder
     test_pred = np.array(LABEL_LIST)[predict(model, test_dl, device)]
     metrics = {"model": cfg["model_name"], "history": history, "best_val_macro_f1": best_f1,
                "test": score(test.label, test_pred)}

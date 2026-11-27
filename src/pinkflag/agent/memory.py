@@ -138,7 +138,9 @@ class Memory:
         fields = {k: str(v).strip() for k, v in fields.items() if k in GUY_FIELDS and v is not None}
         if fields:
             sets = ", ".join(f"{k} = ?" for k in fields)
-            self.db.execute(f"UPDATE guys SET {sets} WHERE id = ?", (*fields.values(), guy_id))
+            # column names come from the GUY_FIELDS allow-list, values are bound parameters
+            query = f"UPDATE guys SET {sets} WHERE id = ?"  # nosec B608
+            self.db.execute(query, (*fields.values(), guy_id))
             self.db.commit()
 
     def delete_guy(self, guy_id: int) -> None:
