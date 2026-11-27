@@ -36,9 +36,9 @@ VOICE = "Aoede"  # warm, breezy female voice
 STYLE = "Read this warmly and confidently, like a friendly tech presenter, at a natural pace: "
 
 SCENES = [
-    ("hook", "A fine-tuned multilingual transformer. A BiLSTM trained from scratch. An LLM agent with tools "
+    ("hook", ("A fine-tuned multilingual transformer. A BiLSTM trained from scratch. An LLM agent with tools "
              "and memory, and speech models running on a laptop GPU. All built to answer one question: "
-             "is he husband material, or a walking red flag? Meet PinkFlag."),
+             "is he husband material, or a walking red flag? Meet PinkFlag.")),
     ("chat", ("Paste what he said, and Sisi, our AI agent, gets you the receipts. A classifier we trained "
              "detects the manipulation pattern, and Sisi explains it like a big sister would.")),
     ("receipts", ("Every guy gets his own case file: a vibe meter, a timeline of flags, and a profile Sisi "
