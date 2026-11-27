@@ -16,7 +16,6 @@ from sklearn.pipeline import FeatureUnion, Pipeline
 
 from pinkflag.taxonomy import GREEN, LABELS
 
-
 CONFIDENCE_THRESHOLD = 0.40
 
 

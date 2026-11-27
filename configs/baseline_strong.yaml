@@ -1,4 +1,4 @@
-# Experiment: baseline trained on TRUSTED labels only (same test set, for a fair comparison)
+﻿# Experiment: baseline trained on TRUSTED labels only (same test set, for a fair comparison)
 experiment: pinkflag-baseline-strong
 seed: 42
 
@@ -8,7 +8,7 @@ data:
   test: data/processed/test.csv
   test_derja: data/processed/test_derja.csv
   # error analysis showed these labels disagree with the text most often
-  exclude_label_quality: [dataset_loose, dataset_not_manipulative, translated_unreviewed]
+  exclude_label_quality: [dataset_loose, dataset_not_manipulative, translated_unreviewed, dataset_llm_conflict, dataset_llm_agree]
 
 features:
   word_ngrams: [1, 2]
@@ -23,3 +23,6 @@ model:
 output:
   model_path: models/baseline_strong.joblib
   report_path: reports/baseline_strong_metrics.json
+
+
+

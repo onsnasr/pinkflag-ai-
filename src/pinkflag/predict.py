@@ -7,7 +7,6 @@ import argparse
 import sys
 
 from pinkflag.agent.tools import load_detector
-
 from pinkflag.models.baseline import predict
 
 
