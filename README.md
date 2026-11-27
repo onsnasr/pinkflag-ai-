@@ -153,7 +153,7 @@ Same trusted training data (591 rows), same clean test set (n = 114), **95% boot
 
 ## 🧪 testing & security pipeline
 
-Every push runs two GitHub Actions workflows:
+Run it all locally before pushing with `python tools/check.py` (or `--fast` for lint + unit only). Every push then runs the same checks again in two GitHub Actions workflows, plus the DAST scan:
 
 | layer | tool | what it checks |
 |---|---|---|
