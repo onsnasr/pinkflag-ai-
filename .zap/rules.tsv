@@ -1,1 +1,5 @@
-# rule id	action	reason
+10055	IGNORE	(CSP style-src unsafe-inline: needed for inline style attributes; script-src stays strict 'self')
+90003	IGNORE	(SRI missing: only on the Google Fonts stylesheet, which Google generates per browser so it has no fixed hash)
+10027	IGNORE	(Suspicious comments: normal code comments in app.js, no secrets)
+10049	IGNORE	(Storable and cacheable content: informational; the API already sends no-store)
+10109	IGNORE	(Modern web application: informational)
