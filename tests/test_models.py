@@ -1,8 +1,10 @@
 import numpy as np
-import torch
+import pytest
 
-from pinkflag.evaluate import bootstrap, metrics
-from pinkflag.train_bilstm import PAD, BiLSTMClassifier, Vocab, tokenize
+torch = pytest.importorskip("torch")  # CI installs without PyTorch: skip instead of failing
+
+from pinkflag.evaluate import bootstrap, metrics  # noqa: E402
+from pinkflag.train_bilstm import PAD, BiLSTMClassifier, Vocab, tokenize  # noqa: E402
 
 
 def test_tokenize_keeps_slang_and_emoji():
